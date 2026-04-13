@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Shock Portfolio Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e;
+      --green: #22c55e; --yellow: #eab308; --orange: #f97316;
+      --teal: #14b8a6; --blue: #60a5fa; --gold: #d97706;
+      --red: #f87171; --gray: #9ca3af;
+    }
+    body { background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px; line-height: 1.5; }
+    #timeline { background: #0d1f0d; border-bottom: 1px solid #1a3a1a; padding: 12px 20px; }
+    #timeline h3 { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .phases { display: flex; gap: 0; flex-wrap: wrap; }
+    .phase { flex: 1; min-width: 180px; padding: 8px 14px; border-left: 3px solid var(--border); }
+    .phase.active { border-left-color: var(--green); background: rgba(34,197,94,.06); }
+    .phase-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .phase.active .phase-label { color: var(--green); }
+    .phase:not(.active) .phase-label { color: var(--muted); }
+    .phase-title { font-size: .82rem; font-weight: 600; margin: 2px 0; }
+    .phase-time { font-size: .7rem; color: var(--muted); }
+    .phase.active .phase-title { color: var(--text); }
+    .phase:not(.active) .phase-title { color: #4b5563; }
+    #war-banner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 9px 20px; font-size: .9rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; user-select: none; transition: background .2s; }
+    #war-banner.escalating { background:#3b0a0a; color:#f87171; border-bottom:2px solid #f87171; }
+    #war-banner.ceasefire  { background:#2d2506; color:#fbbf24; border-bottom:2px solid #fbbf24; }
+    #war-banner.monitoring { background:#0f172a; color:#60a5fa; border-bottom:2px solid #60a5fa; }
+    #war-banner .hint { font-size:.65rem; font-weight:400; opacity:.7; }
+    #vix-alert { display: none; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: #1a0a2e; border-bottom: 2px solid #a78bfa; color: #a78bfa; font-weight: 700; font-size: .9rem; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .header-title { flex: 1; min-width: 200px; }
+    .header-title h1 { font-size: 1.15rem; font-weight: 700; }
+    .header-title p { color: var(--muted); font-size: .78rem; margin-top: 2px; }
+    #last-updated { color: var(--muted); font-size: .72rem; white-space: nowrap; }
+    main { max-width: 1400px; margin: 0 auto; padding: 18px 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    @media(max-width:860px){ .grid-2 { grid-template-columns: 1fr; } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+    .chart-wrap { position: relative; width: 100%; }
+    .chart-wrap.tall { height: 420px; }
+    .chart-wrap.short { height: 320px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: .72rem; color: var(--muted); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    thead th { background: var(--bg); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: .68rem; padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    thead th.num { text-align: right; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody td { padding: 6px 10px; white-space: nowrap; }
+    tbody td.num { text-align: right; font-family: "SF Mono","Fira Code",monospace; }
+    .pos { color: #4ade80; } .neg { color: #f87171; } .neutral { color: var(--muted); }
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: .65rem; font-weight: 700; }
+    .badge-long { background:#052e16; color:#4ade80; }
+    .badge-short { background:#3b0a0a; color:#f87171; }
+    .badge-watch { background:#1c1c07; color:#fbbf24; }
+    .badge-benchmark { background:#1a1a1a; color:#9ca3af; }
+    #no-data { display:none; padding:48px; text-align:center; color:var(--muted); }
+    #no-data h3 { font-size:1.1rem; margin-bottom:8px; color:var(--text); }
+    code { background:#1c2128; padding:2px 6px; border-radius:4px; font-size:.85em; }
+    footer { border-top:1px solid var(--border); padding:14px 20px; color:var(--muted); font-size:.68rem; text-align:center; line-height:1.7; }
+    footer strong { color:var(--text); }
+  </style>
+</head>
+<body>
+<div id="timeline">
+  <h3>Food Shock Thesis Timeline — from 2026-04-13</h3>
+  <div class="phases">
+    <div class="phase active" id="phase1"><div class="phase-label">Phase 1 — NOW</div><div class="phase-title">Fertilizer &amp; Diesel Constraints</div><div class="phase-time">Months 1–3 · Play: CF, NTR, MOS</div></div>
+    <div class="phase" id="phase2"><div class="phase-label">Phase 2</div><div class="phase-title">Crop Yield Shortfalls</div><div class="phase-time">Months 6–9 · Play: WEAT, CORN, DBA</div></div>
+    <div class="phase" id="phase3"><div class="phase-label">Phase 3</div><div class="phase-title">Food Inflation Spike</div><div class="phase-time">Months 9–12 · Play: ADM, BG, PDBA</div></div>
+  </div>
+</div>
+<div id="war-banner" onclick="cycleStatus()" title="Click to toggle">
+  <span id="war-icon"></span><span id="war-label"></span><span class="hint">(click to toggle)</span>
+</div>
+<div id="vix-alert">⚡ VIX BELOW 20 — Hedge buying opportunity. Consider VIXY / TAIL positions.</div>
+<header>
+  <div class="header-title">
+    <h1>Food Shock Portfolio Tracker</h1>
+    <p>Thesis: Santiago Capital · Post-ceasefire delayed energy→fertilizer→food transmission · Start: 2026-04-13</p>
+  </div>
+  <div id="last-updated">Loading…</div>
+</header>
+<main>
+  <div id="no-data"><h3>No data yet</h3><p>Run <code>python fetch_prices.py</code> to populate tracker.csv.<br>GitHub Action auto-runs Mon–Fri at 21:30 UTC.</p></div>
+  <div id="dashboard" style="display:none">
+    <div class="grid-2">
+      <div class="card"><h2>% Change since thesis start (2026-04-13)</h2><div class="chart-wrap tall"><canvas id="barChart"></canvas></div></div>
+      <div class="card"><h2>Cumulative performance by category</h2><div class="legend" id="lineLegend"></div><div class="chart-wrap short"><canvas id="lineChart"></canvas></div></div>
+    </div>
+    <div class="card"><h2>Summary — all positions</h2><div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Name</th><th>Side</th><th>Category</th><th class="num">Price</th><th class="num">Today %</th><th class="num">Since Start %</th><th>Target</th><th>Timeframe</th></tr></thead><tbody id="summaryBody"></tbody></table></div></div>
+  </div>
+</main>
+<footer><strong>DISCLAIMER:</strong> Informational and educational purposes only. Not financial advice. Past performance does not guarantee future results. Data via Yahoo Finance / yfinance. Thesis credit: Milkshakes, Markets &amp; Madness (Santiago Capital). Always consult a licensed financial advisor.</footer>
+<script>
+const ASSETS = {
+  WEAT:{name:"Teucrium Wheat ETF",cat:"Agriculture",side:"LONG",target:"+20-40%",tf:"6-9 mo",color:"#22c55e"},
+  CORN:{name:"Teucrium Corn ETF",cat:"Agriculture",side:"LONG",target:"+15-30%",tf:"6-9 mo",color:"#22c55e"},
+  CF:{name:"CF Industries",cat:"Fertilizer",side:"LONG",target:"momentum",tf:"1-3 mo",color:"#eab308"},
+  NTR:{name:"Nutrien",cat:"Fertilizer",side:"LONG",target:"+20%",tf:"1-3 mo",color:"#eab308"},
+  MOS:{name:"Mosaic",cat:"Fertilizer",side:"LONG",target:"+25%",tf:"1-3 mo",color:"#eab308"},
+  DBA:{name:"Invesco DB Agriculture ETF",cat:"Soft Commodities",side:"LONG",target:"+15%",tf:"6-9 mo",color:"#f97316"},
+  PDBA:{name:"Invesco Agriculture ETF (noK1)",cat:"Soft Commodities",side:"LONG",target:"+15%",tf:"6-9 mo",color:"#f97316"},
+  ADM:{name:"Archer-Daniels-Midland",cat:"Merchants",side:"WATCH",target:"pullback entry",tf:"TBD",color:"#14b8a6"},
+  BG:{name:"Bunge",cat:"Merchants",side:"WATCH",target:"pullback entry",tf:"TBD",color:"#14b8a6"},
+  UNG:{name:"US Natural Gas ETF",cat:"Natural Gas",side:"SHORT",target:"-20%",tf:"spread",color:"#60a5fa"},
+  GLD:{name:"SPDR Gold Shares",cat:"Metals",side:"WATCH",target:"low $4,000s",tf:"200DMA",color:"#d97706"},
+  SLV:{name:"iShares Silver Trust",cat:"Metals",side:"WATCH",target:"~$60",tf:"200DMA",color:"#d97706"},
+  XLY:{name:"Consumer Discretionary ETF",cat:"Hedge/Short",side:"SHORT",target:"-15%",tf:"6-9 mo",color:"#f87171"},
+  VIXY:{name:"ProShares VIX ETF",cat:"Hedge/Short",side:"WATCH",target:"VIX < 20",tf:"tactical",color:"#f87171"},
+  SPY:{name:"S&P 500",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"},
+  QQQ:{name:"Nasdaq 100",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"},
+  DIA:{name:"Dow Jones ETF",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"}
+};
+const CAT_COLORS={"Agriculture":"#22c55e","Fertilizer":"#eab308","Soft Commodities":"#f97316","Merchants":"#14b8a6","Natural Gas":"#60a5fa","Metals":"#d97706","Hedge/Short":"#f87171","Benchmark":"#9ca3af"};
+(function(){const s=new Date("2026-04-13"),d=Math.floor((new Date()-s)/86400000);document.getElementById("phase1").classList.toggle("active",d<90);document.getElementById("phase2").classList.toggle("active",d>=90&&d<270);document.getElementById("phase3").classList.toggle("active",d>=270);})();
+const STATUSES=[{key:"escalating",icon:"\uD83D\uDD34",label:"ESCALATING",cls:"escalating"},{key:"ceasefire",icon:"\uD83D\DFE1",label:"CEASEFIRE",cls:"ceasefire"},{key:"monitoring",icon:"\uD83D\uDD35",label:"MONITORING",cls:"monitoring"}];
+let statusIdx=1;
+function applyStatus(){const s=STATUSES[statusIdx],b=document.getElementById("war-banner");b.className=s.cls;document.getElementById("war-icon").textContent=s.icon;document.getElementById("war-label").textContent=s.label;}
+function cycleStatus(){statusIdx=(statusIdx+1)%STATUSES.length;localStorage.setItem("warStatus2",STATUSES[statusIdx].key);applyStatus();}
+(function(){const s=localStorage.getItem("warStatus2");if(s){const i=STATUSES.findIndex(x=>x.key===s);if(i>=0)statusIdx=i;}applyStatus();})();
+function parseCSV(t){const l=t.trim().split("\n").filter(x=>x.trim());if(l.length<2)return[];const h=l[0].split(",").map(x=>x.trim());return l.slice(1).map(r=>{const v=r.split(","),o={};h.forEach((k,i)=>{o[k]=v[i]?v[i].trim():"";});return o;});}
+function groupByTicker(rows){const g={};rows.forEach(r=>{if(!r.ticker||!r.close||r.close==="")return;if(!g[r.ticker])g[r.ticker]=[];g[r.ticker].push({date:r.date,close:parseFloat(r.close)});});Object.keys(g).forEach(t=>g[t].sort((a,b)=>a.date.localeCompare(b.date)));return g;}
+function pct(a,b){if(!a||!b||b===0)return null;return(a-b)/b*100;}
+function fmt(v,d=2){if(v==null||isNaN(v))return"\u2014";return v.toFixed(d);}
+function fmtPct(v){if(v==null||isNaN(v))return"\u2014";return(v>=0?"+":"")+v.toFixed(2)+"%";}
+let barC,lineC;
+function buildBar(tickers,byTicker){const items=tickers.filter(t=>byTicker[t]&&byTicker[t].length>=1).map(t=>{const a=byTicker[t],base=a[0].close,last=a[a.length-1].close;return{t,p:pct(last,base),color:ASSETS[t]?.color||"#8b949e"};}).filter(d=>d.p!==null).sort((a,b)=>b.p-a.p);const ctx=document.getElementById("barChart").getContext("2d");if(barC)barC.destroy();barC=new Chart(ctx,{type:"bar",data:{labels:items.map(d=>d.t),datasets:[{data:items.map(d=>d.p),backgroundColor:items.map(d=>d.color+"bb"),borderColor:items.map(d=>d.color),borderWidth:1,borderRadius:3}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPct(c.parsed.x),title:c=>`${c[0].label} \u2014 ${ASSETS[c[0].label]?.name||""}` }}},scales:{x:{grid:{color:"rgba(255,255,255,.06)"},border:{color:"#30363d"},ticks:{color:"#8b949e",callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}},y:{grid:{display:false},border:{color:"#30363d"},ticks:{color:"#e6edf3",font:{family:"monospace",size:12}}}}}});}
+function buildLine(byTicker){const catD={},catC={};Object.keys(byTicker).forEach(t=>{const cat=ASSETS[t]?.cat;if(!cat||cat==="Benchmark")return;byTicker[t].forEach(pt=>{const base=byTicker[t][0].close,p=pct(pt.close,base);if(!catD[cat]){catD[cat]={};catC[cat]={};}catD[cat][pt.date]=(catD[cat][pt.date]||0)+p;catC[cat][pt.date]=(catC[cat][pt.date]||0)+1;});});if(byTicker["SPY"]){catD["S&P 500 (ref)"]={};catC["S&P 500 (ref)"]={};byTicker["SPY"].forEach(pt=>{catD["S&P 500 (ref)"][pt.date]=pct(pt.close,byTicker["SPY"][0].close);catC["S&P 500 (ref)"][pt.date]=1;});}
+const allDates=[...new Set(Object.values(catD).flatMap(d=>Object.keys(d)))].sort();const datasets=Object.keys(catD).map(cat=>{const color=cat==="S&P 500 (ref)"?"#9ca3af":(CAT_COLORS[cat]||"#8b949e");return{label:cat,data:allDates.map(d=>{const sum=catD[cat][d],cnt=catC[cat]?.[d];return(sum!=null&&cnt)?sum/cnt:null;}),borderColor:color,backgroundColor:"transparent",borderWidth:cat==="S&P 500 (ref)"?1.5:2,borderDash:cat==="S&P 500 (ref)"?[4,3]:[],pointRadius:0,tension:0.2,spanGaps:true};});const ctx=document.getElementById("lineChart").getContext("2d");if(lineC)lineC.destroy();lineC=new Chart(ctx,{type:"line",data:{labels:allDates,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtPct(c.parsed.y)}`}}},scales:{x:{grid:{color:"rgba(255,255,255,.04)"},border:{color:"#30363d"},ticks:{color:"#8b949e",maxTicksLimit:8,maxRotation:0}},y:{grid:{color:"rgba(255,255,255,.06)"},border:{color:"#30363d"},ticks:{color:"#8b949e",callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}}}}});const legend=document.getElementById("lineLegend");legend.innerHTML="";datasets.forEach(ds=>{legend.innerHTML+=`<span class="legend-item"><span class="legend-dot" style="background:${ds.borderColor}"></span>${ds.label}</span>`;});}
+function buildTable(tickers,byTicker){const tbody=document.getElementById("summaryBody");tbody.innerHTML="";const rows=tickers.filter(t=>byTicker[t]).map(t=>{const a=byTicker[t],base=a[0].close,last=a[a.length-1].close,prev=a.length>1?a[a.length-2].close:null,meta=ASSETS[t]||{};return{t,meta,price:last,todayPct:pct(last,prev),startPct:pct(last,base)};}).sort((a,b)=>{const order=["LONG","SHORT","WATCH","BENCHMARK"],oi=s=>order.indexOf(s?.meta?.side)===-1?99:order.indexOf(s?.meta?.side);if(oi(a)!==oi(b))return oi(a)-oi(b);if(a.startPct==null)return 1;if(b.startPct==null)return-1;return b.startPct-a.startPct;});rows.forEach(r=>{const tc=v=>v==null?"neutral":v>=0?"pos":"neg",sideCls={LONG:"badge-long",SHORT:"badge-short",WATCH:"badge-watch",BENCHMARK:"badge-benchmark"},color=r.meta.color||"#8b949e",tr=document.createElement("tr");tr.innerHTML=`<td><strong style="font-family:monospace;color:${color}">${r.t}</strong></td><td style="color:#8b949e;font-size:.78rem">${r.meta.name||r.t}</td><td><span class="badge ${sideCls[r.meta.side]||'badge-watch'}">${r.meta.side||'WATCH'}</span></td><td><span style="font-size:.72rem;color:${color}">${r.meta.cat||'\u2014'}</span></td><td class="num">${r.price!=null?"$"+fmt(r.price):"\u2014"}</td><td class="num ${tc(r.todayPct)}">${fmtPct(r.todayPct)}</td><td class="num ${tc(r.startPct)}">${fmtPct(r.startPct)}</td><td style="font-size:.75rem;color:#8b949e">${r.meta.target||'\u2014'}</td><td style="font-size:.75rem;color:#8b949e">${r.meta.tf||'\u2014'}</td>`;tbody.appendChild(tr);});}
+async function load(){let text;try{const res=await fetch("./tracker.csv?"+Date.now());if(!res.ok)throw new Error(res.status);text=await res.text();}catch(e){document.getElementById("no-data").style.display="block";return;}
+const rows=parseCSV(text).filter(r=>r.ticker&&r.close&&r.close!=="");if(!rows.length){document.getElementById("no-data").style.display="block";return;}
+document.getElementById("dashboard").style.display="block";
+const byTicker=groupByTicker(rows),tickers=Object.keys(ASSETS).filter(t=>byTicker[t]),lastDate=rows.reduce((a,r)=>r.date>a?r.date:a,"");
+document.getElementById("last-updated").textContent="Last updated: "+lastDate;
+const vixData=byTicker["^VIX"];if(vixData&&vixData.length>0&&vixData[vixData.length-1].close<20)document.getElementById("vix-alert").style.display="flex";
+buildBar(tickers,byTicker);buildLine(byTicker);buildTable(tickers,byTicker);}
+document.addEventListener("DOMContentLoaded",load);
+</script>
+</body>
+</html>
