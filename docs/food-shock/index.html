@@ -344,6 +344,18 @@ tbody td.num {
   background:#1a1a1a;
   color:#9ca3af;
 }
+/* Filter bar */
+#filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; position: relative; z-index: 1; }
+.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.filter-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em; }
+.chip:hover { border-color: var(--text); color: var(--text); }
+.chip.active-chip { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.1); }
+.filter-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; outline: none; }
+.filter-select:focus { border-color: var(--green); }
+.filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+
 #no-data {
   display:none;
   padding:48px;
@@ -423,6 +435,45 @@ footer strong {
   </div>
   <div id="last-updated"></div>
 </header>
+
+<div id="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">Category</span>
+    <div class="filter-chips" id="catChips">
+      <button class="chip active-chip" data-cat="all">All</button>
+      <button class="chip" data-cat="Agriculture">Agriculture</button>
+      <button class="chip" data-cat="Fertilizer">Fertilizer</button>
+      <button class="chip" data-cat="Soft Commodities">Soft Commod.</button>
+      <button class="chip" data-cat="Merchants">Merchants</button>
+      <button class="chip" data-cat="Natural Gas">Natural Gas</button>
+      <button class="chip" data-cat="Metals">Metals</button>
+      <button class="chip" data-cat="Hedge/Short">Hedge/Short</button>
+      <button class="chip" data-cat="Benchmark">Benchmark</button>
+    </div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Side</span>
+    <div class="filter-chips" id="sideChips">
+      <button class="chip active-chip" data-side="all">All</button>
+      <button class="chip" data-side="LONG">Long</button>
+      <button class="chip" data-side="SHORT">Short</button>
+      <button class="chip" data-side="WATCH">Watch</button>
+      <button class="chip" data-side="BENCHMARK">Benchmark</button>
+    </div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Sort</span>
+    <select class="filter-select" id="sortSelect">
+      <option value="start_desc">Since Start % &#x2193;</option>
+      <option value="start_asc">Since Start % &#x2191;</option>
+      <option value="today_desc">Today % &#x2193;</option>
+      <option value="today_asc">Today % &#x2191;</option>
+      <option value="az">A &#x2192; Z</option>
+    </select>
+  </div>
+</div>
 
 <main>
   <div id="dashboard" style="display:none;">
@@ -583,7 +634,49 @@ function fmtPct(v){
   return(v>=0?"+":"")+v.toFixed(2)+"%";
 }
 
-let barC,lineC;
+let barC, lineC;
+
+// ── Global data store for reactive filtering ──
+let gByTicker = {}, gTickers = [];
+let gActiveCat = "all", gActiveSide = "all", gActiveSort = "start_desc";
+
+function getFilteredTickers() {
+  return gTickers.filter(t => {
+    if (gActiveCat  !== "all" && ASSETS[t]?.cat  !== gActiveCat)  return false;
+    if (gActiveSide !== "all" && ASSETS[t]?.side !== gActiveSide) return false;
+    return true;
+  });
+}
+
+function applyFilters() {
+  const tickers = getFilteredTickers();
+  buildBar(tickers, gByTicker);
+  buildLine(gByTicker, tickers);
+  buildTable(tickers, gByTicker, gActiveSort);
+}
+
+function initFilters() {
+  document.getElementById("catChips").addEventListener("click", e => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    document.querySelectorAll("#catChips .chip").forEach(c => c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");
+    gActiveCat = btn.dataset.cat;
+    applyFilters();
+  });
+  document.getElementById("sideChips").addEventListener("click", e => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    document.querySelectorAll("#sideChips .chip").forEach(c => c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");
+    gActiveSide = btn.dataset.side;
+    applyFilters();
+  });
+  document.getElementById("sortSelect").addEventListener("change", e => {
+    gActiveSort = e.target.value;
+    applyFilters();
+  });
+}
 
 function buildBar(tickers,byTicker){
   const items=tickers.filter(t=>byTicker[t]&&byTicker[t].length>=1).map(t=>{
@@ -634,9 +727,10 @@ function buildBar(tickers,byTicker){
   });
 }
 
-function buildLine(byTicker){
+function buildLine(byTicker, filteredTickers){
+  const allowed = new Set(filteredTickers || Object.keys(byTicker));
   const catD={},catC={};
-  Object.keys(byTicker).forEach(t=>{
+  Object.keys(byTicker).filter(t=>allowed.has(t)).forEach(t=>{
     const cat=ASSETS[t]?.cat;
     if(!cat||cat==="Benchmark")return;
     byTicker[t].forEach(pt=>{
@@ -707,19 +801,21 @@ function buildLine(byTicker){
   });
 }
 
-function buildTable(tickers,byTicker){
+function buildTable(tickers, byTicker, sortKey="start_desc"){
   const tbody=document.getElementById("summaryBody");
   tbody.innerHTML="";
   const rows=tickers.filter(t=>byTicker[t]).map(t=>{
     const a=byTicker[t],base=a[0].close,last=a[a.length-1].close,prev=a.length>1?a[a.length-2].close:null,meta=ASSETS[t]||{};
     return{t,meta,price:last,todayPct:pct(last,prev),startPct:pct(last,base)};
-  }).sort((a,b)=>{
-    const order=["LONG","SHORT","WATCH","BENCHMARK"],oi=s=>order.indexOf(s?.meta?.side)===-1?99:order.indexOf(s?.meta?.side);
-    if(oi(a)!==oi(b))return oi(a)-oi(b);
-    if(a.startPct==null)return 1;
-    if(b.startPct==null)return-1;
-    return b.startPct-a.startPct;
   });
+  const sorters={
+    start_desc:(a,b)=>(b.startPct??-Infinity)-(a.startPct??-Infinity),
+    start_asc: (a,b)=>(a.startPct??Infinity)-(b.startPct??Infinity),
+    today_desc:(a,b)=>(b.todayPct??-Infinity)-(a.todayPct??-Infinity),
+    today_asc: (a,b)=>(a.todayPct??Infinity)-(b.todayPct??Infinity),
+    az:        (a,b)=>a.t.localeCompare(b.t),
+  };
+  rows.sort(sorters[sortKey]??sorters.start_desc);
 
   rows.forEach(r=>{
     const tc=v=>v==null?"neutral":v>=0?"pos":"neg",sideCls={LONG:"badge-long",SHORT:"badge-short",WATCH:"badge-watch",BENCHMARK:"badge-benchmark"},color=r.meta.color||"#8b949e",tr=document.createElement("tr");
@@ -747,16 +843,17 @@ async function load(){
 
   document.getElementById("dashboard").style.display="block";
 
-  const byTicker=groupByTicker(rows),tickers=Object.keys(ASSETS).filter(t=>byTicker[t]),lastDate=rows.reduce((a,r)=>r.date>a?r.date:a,"");
+  gByTicker = groupByTicker(rows);
+  gTickers  = Object.keys(ASSETS).filter(t=>gByTicker[t]);
+  const lastDate=rows.reduce((a,r)=>r.date>a?r.date:a,"");
 
   document.getElementById("last-updated").textContent="Last updated: "+lastDate;
 
-  const vixData=byTicker["^VIX"];
+  const vixData=gByTicker["^VIX"];
   if(vixData&&vixData.length>0&&vixData[vixData.length-1].close<20)document.getElementById("vix-alert").style.display="flex";
 
-  buildBar(tickers,byTicker);
-  buildLine(byTicker);
-  buildTable(tickers,byTicker);
+  initFilters();
+  applyFilters();
 }
 
 document.addEventListener("DOMContentLoaded",load);

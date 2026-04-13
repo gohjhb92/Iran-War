@@ -63,6 +63,18 @@ tbody td.num { text-align: right; font-family: "SF Mono", "Fira Code", monospace
 #no-data h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
 footer { border-top: 1px solid var(--border); padding: 16px 24px; color: var(--muted); font-size: 0.72rem; text-align: center; line-height: 1.6; font-style: italic; background: linear-gradient(to bottom, var(--bg), #05070a); position: relative; z-index: 1; }
 footer strong { color: var(--text); font-style: normal; }
+
+/* Filter bar */
+#filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; position: relative; z-index: 1; }
+.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.filter-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em; }
+.chip:hover { border-color: var(--text); color: var(--text); }
+.chip.active-chip { border-color: var(--orange); color: var(--orange); background: rgba(249,115,22,0.12); }
+.filter-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; outline: none; }
+.filter-select:focus { border-color: var(--orange); }
+.filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -84,6 +96,42 @@ footer strong { color: var(--text); font-style: normal; }
   <span id="war-icon">🔴</span>
   <span id="war-label">ESCALATING</span>
   <span class="hint">(click to toggle)</span>
+</div>
+
+<div id="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">Category</span>
+    <div class="filter-chips" id="catChips">
+      <button class="chip active-chip" data-cat="all">All</button>
+      <button class="chip" data-cat="Energy">Energy</button>
+      <button class="chip" data-cat="Tanker">Tanker</button>
+      <button class="chip" data-cat="LNG">LNG</button>
+      <button class="chip" data-cat="Defense">Defense</button>
+      <button class="chip" data-cat="Commodities">Commodities</button>
+      <button class="chip" data-cat="Hedge">Hedge</button>
+      <button class="chip" data-cat="Benchmark">Benchmark</button>
+    </div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Show</span>
+    <div class="filter-chips" id="perfChips">
+      <button class="chip active-chip" data-perf="all">All</button>
+      <button class="chip" data-perf="winners">Winners</button>
+      <button class="chip" data-perf="losers">Losers</button>
+    </div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Sort</span>
+    <select class="filter-select" id="sortSelect">
+      <option value="start_desc">Since Start % &#x2193;</option>
+      <option value="start_asc">Since Start % &#x2191;</option>
+      <option value="today_desc">Today % &#x2193;</option>
+      <option value="today_asc">Today % &#x2191;</option>
+      <option value="az">A &#x2192; Z</option>
+    </select>
+  </div>
 </div>
 
 <main>
@@ -231,6 +279,55 @@ function fmtPct(v) {
 
 let barChart, lineChart;
 
+// ── Global data store for reactive filtering ──
+let gTickers = [], gBaselineRow = {}, gLatestRow = {}, gPrevRow = null, gDates = [], gSeriesMap = {};
+let gActiveCat = "all", gActivePerf = "all", gActiveSort = "start_desc";
+
+function getFilteredTickers() {
+  return gTickers.filter(t => {
+    if (gActiveCat !== "all" && ASSETS[t]?.cat !== gActiveCat) return false;
+    if (gActivePerf !== "all") {
+      const sp = pct(parseFloat(gLatestRow[t]), parseFloat(gBaselineRow[t]));
+      if (gActivePerf === "winners" && (sp === null || sp < 0)) return false;
+      if (gActivePerf === "losers"  && (sp === null || sp >= 0)) return false;
+    }
+    return true;
+  });
+}
+
+function applyFilters() {
+  const tickers = getFilteredTickers();
+  const pctChanges = tickers.map(t => pct(parseFloat(gLatestRow[t]), parseFloat(gBaselineRow[t])));
+  buildBarChart(tickers, pctChanges);
+  const filteredSeries = {};
+  tickers.forEach(t => { filteredSeries[t] = gSeriesMap[t]; });
+  buildLineChart(gDates, filteredSeries);
+  buildTable(tickers, gBaselineRow, gLatestRow, gPrevRow, gActiveSort);
+}
+
+function initFilters() {
+  document.getElementById("catChips").addEventListener("click", e => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    document.querySelectorAll("#catChips .chip").forEach(c => c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");
+    gActiveCat = btn.dataset.cat;
+    applyFilters();
+  });
+  document.getElementById("perfChips").addEventListener("click", e => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    document.querySelectorAll("#perfChips .chip").forEach(c => c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");
+    gActivePerf = btn.dataset.perf;
+    applyFilters();
+  });
+  document.getElementById("sortSelect").addEventListener("change", e => {
+    gActiveSort = e.target.value;
+    applyFilters();
+  });
+}
+
 function buildBarChart(tickers, pctChanges) {
   const sorted = tickers
     .map((t, i) => ({ ticker: t, pct: pctChanges[i] }))
@@ -345,30 +442,31 @@ function buildLineChart(dates, seriesMap) {
   });
 }
 
-function buildTable(tickers, baselineRow, latestRow, prevRow) {
+function buildTable(tickers, baselineRow, latestRow, prevRow, sortKey = "start_desc") {
   const tbody = document.getElementById("summaryBody");
   tbody.innerHTML = "";
-  const sorted = tickers
-    .map(t => {
-      const base = parseFloat(baselineRow[t]);
-      const last = parseFloat(latestRow[t]);
-      const prev = prevRow ? parseFloat(prevRow[t]) : null;
-      return {
-        ticker: t,
-        cat: ASSETS[t]?.cat ?? "—",
-        name: ASSETS[t]?.name ?? t,
-        color: ASSETS[t]?.color ?? "#8b949e",
-        price: isNaN(last) ? null : last,
-        todayPct: pct(last, prev),
-        startPct: pct(last, base),
-      };
-    })
-    .sort((a, b) => {
-      if (a.startPct === null && b.startPct === null) return 0;
-      if (a.startPct === null) return 1;
-      if (b.startPct === null) return -1;
-      return b.startPct - a.startPct;
-    });
+  const rows = tickers.map(t => {
+    const base = parseFloat(baselineRow[t]);
+    const last = parseFloat(latestRow[t]);
+    const prev = prevRow ? parseFloat(prevRow[t]) : null;
+    return {
+      ticker: t,
+      cat: ASSETS[t]?.cat ?? "—",
+      name: ASSETS[t]?.name ?? t,
+      color: ASSETS[t]?.color ?? "#8b949e",
+      price: isNaN(last) ? null : last,
+      todayPct: pct(last, prev),
+      startPct: pct(last, base),
+    };
+  });
+  const sorters = {
+    start_desc: (a, b) => (b.startPct ?? -Infinity) - (a.startPct ?? -Infinity),
+    start_asc:  (a, b) => (a.startPct ?? Infinity)  - (b.startPct ?? Infinity),
+    today_desc: (a, b) => (b.todayPct ?? -Infinity) - (a.todayPct ?? -Infinity),
+    today_asc:  (a, b) => (a.todayPct ?? Infinity)  - (b.todayPct ?? Infinity),
+    az:         (a, b) => a.ticker.localeCompare(b.ticker),
+  };
+  const sorted = rows.sort(sorters[sortKey] ?? sorters.start_desc);
   sorted.forEach(r => {
     const todayCls = r.todayPct === null ? "neutral" : r.todayPct >= 0 ? "pos" : "neg";
     const startCls = r.startPct === null ? "neutral" : r.startPct >= 0 ? "pos" : "neg";
@@ -407,24 +505,18 @@ async function loadData() {
     return;
   }
   document.getElementById("dashboard").style.display = "block";
-  const tickers = Object.keys(ASSETS).filter(t => headers.includes(t));
-  const baselineRow = dataRows[0];
-  const latestRow = dataRows[dataRows.length - 1];
-  const prevRow = dataRows.length > 1 ? dataRows[dataRows.length - 2] : null;
-  document.getElementById("last-updated").textContent = `Last updated: ${latestRow.Date}`;
-  const pctChanges = tickers.map(t => pct(parseFloat(latestRow[t]), parseFloat(baselineRow[t])));
-  buildBarChart(tickers, pctChanges);
-  const dates = dataRows.map(r => r.Date);
-  const seriesMap = {};
-  tickers.forEach(t => {
-    const base = parseFloat(baselineRow[t]);
-    seriesMap[t] = dataRows.map(r => {
-      const v = parseFloat(r[t]);
-      return pct(v, base);
-    });
+  gTickers     = Object.keys(ASSETS).filter(t => headers.includes(t));
+  gBaselineRow = dataRows[0];
+  gLatestRow   = dataRows[dataRows.length - 1];
+  gPrevRow     = dataRows.length > 1 ? dataRows[dataRows.length - 2] : null;
+  gDates       = dataRows.map(r => r.Date);
+  gTickers.forEach(t => {
+    const base = parseFloat(gBaselineRow[t]);
+    gSeriesMap[t] = dataRows.map(r => pct(parseFloat(r[t]), base));
   });
-  buildLineChart(dates, seriesMap);
-  buildTable(tickers, baselineRow, latestRow, prevRow);
+  document.getElementById("last-updated").textContent = `Last updated: ${gLatestRow.Date}`;
+  initFilters();
+  applyFilters();
 }
 
 document.addEventListener("DOMContentLoaded", loadData);
