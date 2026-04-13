@@ -1,10 +1,11 @@
 # Food Shock Portfolio Tracker
 
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-GitHub_Pages-blue?logo=github)](https://gohjhb92.github.io/G1/food-shock/)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-GitHub_Pages-blue?logo=github)](https://gohjhb92.github.io/Iran-War/food-shock/)
 [![Auto-Update](https://img.shields.io/badge/Auto--Update-Mon--Fri_21:30_UTC-green?logo=github-actions)](../actions/workflows/food-shock-update.yml)
 
-> **Thesis Credit:** Milkshakes, Markets & Madness — Santiago Capital
-> **Thesis Start:** 2026-04-13
+> **Real-time dashboard tracking assets tied to the 2026 food supply shock thesis** — agriculture, fertilizer, soft commodities, grain merchants, natural gas, metals, and tail-risk hedges. Auto-updates via GitHub Actions (Mon–Fri after US market close). Toggle conflict status between ESCALATING / CEASEFIRE / MONITORING to model regime shifts. Performance charted since thesis start on **2026-02-28**.
+>
+> Thesis credit: Milkshakes, Markets & Madness — Santiago Capital
 
 ---
 

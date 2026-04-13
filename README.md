@@ -14,7 +14,7 @@
 |-----------|--------|
 | War start | 2026-02-28 |
 | Fragile ceasefire | 2026-04-08 |
-| Thesis tracking start | **2026-04-13** |
+| Thesis tracking start | **2026-02-28** |
 | Core driver | Strait of Hormuz = ~20% of global oil transit; closure triggers oil shock, LNG scramble, and re-armament cycle |
 | Key risks | Full ceasefire / normalization collapses energy premium; BWET unwinds sharply on re-routing |
 
