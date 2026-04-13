@@ -387,7 +387,7 @@ footer strong {
 </nav>
 
 <div id="timeline">
-  <h3>Food Shock Thesis Timeline — from 2026-04-13</h3>
+  <h3>Food Shock Thesis Timeline — from 2026-02-28</h3>
   <div class="phases">
     <div class="phase active" id="phase1">
       <div class="phase-label">Phase 1 — NOW</div>
@@ -419,7 +419,7 @@ footer strong {
 <header>
   <div class="header-title">
     <h1>Food Shock Portfolio Tracker</h1>
-    <p>Thesis: Santiago Capital · Post-ceasefire delayed energy→fertilizer→food transmission · Start: 2026-04-13</p>
+    <p>Thesis: Santiago Capital · Post-ceasefire delayed energy→fertilizer→food transmission · Start: 2026-02-28</p>
   </div>
   <div id="last-updated"></div>
 </header>
@@ -428,7 +428,7 @@ footer strong {
   <div id="dashboard" style="display:none;">
     <div class="grid-2">
       <div class="card">
-        <h2>% Change since thesis start (2026-04-13)</h2>
+        <h2>% Change since thesis start (2026-02-28)</h2>
         <div class="chart-wrap short">
           <canvas id="barChart"></canvas>
         </div>
@@ -510,7 +510,7 @@ const CAT_COLORS={
 };
 
 (function(){
-  const s=new Date("2026-04-13"),d=Math.floor((new Date()-s)/86400000);
+  const s=new Date("2026-02-28"),d=Math.floor((new Date()-s)/86400000);
   document.getElementById("phase1").classList.toggle("active",d<90);
   document.getElementById("phase2").classList.toggle("active",d>=90&&d<270);
   document.getElementById("phase3").classList.toggle("active",d>=270);
