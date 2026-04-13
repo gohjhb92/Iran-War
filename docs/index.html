@@ -1,226 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iran War Portfolio Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iran War Portfolio Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg: #080c10; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #8b949e; --orange: #f97316; --cyan: #22d3ee; --emerald: #10b981; --blue: #60a5fa; --gold: #fbbf24; --red: #f87171; --gray: #9ca3af; --green: #4ade80; --yellow: #facc15; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
 
-    :root {
-      --bg:        #0d1117;
-      --surface:   #161b22;
-      --border:    #30363d;
-      --text:      #e6edf3;
-      --muted:     #8b949e;
-      --orange:    #f97316;
-      --cyan:      #22d3ee;
-      --emerald:   #10b981;
-      --blue:      #60a5fa;
-      --gold:      #fbbf24;
-      --red:       #f87171;
-      --gray:      #9ca3af;
-      --green:     #4ade80;
-      --yellow:    #facc15;
-    }
+/* Ambient background glow */
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 120% 40% at 50% -5%, rgba(249,115,22,0.07), transparent); z-index: 0; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-      min-height: 100vh;
-    }
+/* Sticky nav */
+nav.site-nav { position: sticky; top: 0; z-index: 100; background: rgba(8,12,16,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; padding: 0 20px; }
+nav.site-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; letter-spacing: 0.02em; }
+nav.site-nav a:hover { color: var(--text); }
+nav.site-nav a.active { color: var(--orange); border-bottom-color: var(--orange); }
+nav.site-nav a.food:hover { color: var(--green); }
 
-    /* ── Header ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-    }
-    .header-title { flex: 1; min-width: 200px; }
-    .header-title h1 { font-size: 1.2rem; font-weight: 700; }
-    .header-title p  { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
-    #last-updated    { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; position: relative; z-index: 1; }
+.header-title { flex: 1; min-width: 200px; border-left: 3px solid var(--orange); padding-left: 14px; }
+.header-title h1 { font-size: 1.25rem; font-weight: 700; background: linear-gradient(90deg, #f97316, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header-title p { color: var(--muted); font-size: 0.8rem; margin-top: 3px; }
+#last-updated { color: var(--muted); font-size: 0.75rem; white-space: nowrap; position: relative; z-index: 1; }
 
-    /* ── War Status Banner ── */
-    #war-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 10px 24px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.2s, color 0.2s;
-    }
-    #war-banner.escalating  { background: #3b0a0a; color: #f87171; border-bottom: 2px solid #f87171; }
-    #war-banner.ceasefire   { background: #2d2506; color: #fbbf24; border-bottom: 2px solid #fbbf24; }
-    #war-banner.deescalating{ background: #052e16; color: #4ade80; border-bottom: 2px solid #4ade80; }
-    #war-banner .hint { font-size: 0.65rem; font-weight: 400; opacity: 0.7; }
+#war-banner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 24px; font-size: 1rem; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; user-select: none; transition: background 0.2s, color 0.2s; position: relative; z-index: 1; }
+#war-banner.escalating { background: #3b0a0a; color: #f87171; border-bottom: 2px solid #f87171; animation: banner-pulse 2.5s ease-in-out infinite; }
+#war-banner.ceasefire { background: #2d2506; color: #fbbf24; border-bottom: 2px solid #fbbf24; }
+#war-banner.deescalating { background: #052e16; color: #4ade80; border-bottom: 2px solid #4ade80; }
+#war-banner .hint { font-size: 0.65rem; font-weight: 400; opacity: 0.6; letter-spacing: 0.02em; }
+@keyframes banner-pulse { 0%,100% { box-shadow: inset 0 0 0 rgba(248,113,113,0); } 50% { box-shadow: inset 0 0 40px rgba(248,113,113,0.1); } }
 
-    /* ── Layout ── */
-    main { max-width: 1400px; margin: 0 auto; padding: 20px 16px; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    @media (max-width: 900px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    /* ── Cards ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    .card h2 {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 14px;
-    }
-    .chart-wrap { position: relative; width: 100%; }
-    .chart-wrap.tall  { height: 420px; }
-    .chart-wrap.short { height: 340px; }
-
-    /* ── Legend ── */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-    .legend-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* ── Summary Table ── */
-    .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-    }
-    thead th {
-      background: var(--bg);
-      color: var(--muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-size: 0.72rem;
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    thead th.num { text-align: right; }
-    tbody tr { border-bottom: 1px solid var(--border); }
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
-    tbody td { padding: 7px 10px; white-space: nowrap; }
-    tbody td.num { text-align: right; font-family: "SF Mono", "Fira Code", monospace; }
-    .pos { color: var(--green); }
-    .neg { color: var(--red); }
-    .neutral { color: var(--muted); }
-
-    .cat-badge {
-      display: inline-block;
-      padding: 1px 7px;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 600;
-    }
-
-    /* ── No-data overlay ── */
-    #no-data {
-      display: none;
-      padding: 40px;
-      text-align: center;
-      color: var(--muted);
-    }
-    #no-data h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
-
-    /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 16px 24px;
-      color: var(--muted);
-      font-size: 0.72rem;
-      text-align: center;
-      line-height: 1.6;
-    }
-    footer strong { color: var(--text); }
-  </style>
+main { max-width: 1400px; margin: 0 auto; padding: 20px 16px; position: relative; z-index: 1; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } nav.site-nav { flex-wrap: wrap; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: box-shadow 0.2s; }
+.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06); }
+.card h2 { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.chart-wrap { position: relative; width: 100%; }
+.chart-wrap.tall { height: 420px; }
+.chart-wrap.short { height: 340px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead tr { border-top: 2px solid var(--orange); }
+thead th { background: var(--bg); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.72rem; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+thead th.num { text-align: right; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
+tbody tr:hover { background: rgba(255,255,255,0.04); }
+tbody td { padding: 7px 10px; white-space: nowrap; }
+tbody td.num { text-align: right; font-family: "SF Mono", "Fira Code", monospace; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neutral { color: var(--muted); }
+.cat-badge { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+#no-data { display: none; padding: 40px; text-align: center; color: var(--muted); }
+#no-data h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
+footer { border-top: 1px solid var(--border); padding: 16px 24px; color: var(--muted); font-size: 0.72rem; text-align: center; line-height: 1.6; font-style: italic; background: linear-gradient(to bottom, var(--bg), #05070a); position: relative; z-index: 1; }
+footer strong { color: var(--text); font-style: normal; }
+</style>
 </head>
 <body>
 
-<!-- ═══ WAR STATUS BANNER ════════════════════════════════════════════════════ -->
-<div id="war-banner" onclick="cycleWarStatus()" title="Click to change war status">
-  <span id="war-icon"></span>
-  <span id="war-label"></span>
-  <span class="hint">(click to toggle)</span>
-</div>
+<nav class="site-nav">
+  <a href="./" class="active">🔴 Iran War Tracker</a>
+  <a href="./food-shock/" class="food">🌾 Food Shock Tracker</a>
+</nav>
 
-<!-- ═══ HEADER ══════════════════════════════════════════════════════════════ -->
 <header>
   <div class="header-title">
     <h1>Iran War Portfolio Tracker</h1>
-    <p>Thesis start: 2026-04-13 &nbsp;|&nbsp; US-Israel vs Iran conflict · Strait of Hormuz · Oil shock · Defense surge</p>
+    <p>Thesis start: 2026-04-13  |  US-Israel vs Iran conflict · Strait of Hormuz · Oil shock · Defense surge</p>
   </div>
-  <div id="last-updated">Loading…</div>
+  <div id="last-updated"></div>
 </header>
 
-<!-- ═══ MAIN ═════════════════════════════════════════════════════════════════ -->
-<main>
+<div id="war-banner" onclick="cycleWarStatus()" title="Click to cycle war status">
+  <span id="war-icon">🔴</span>
+  <span id="war-label">ESCALATING</span>
+  <span class="hint">(click to toggle)</span>
+</div>
 
+<main>
   <div id="no-data">
     <h3>No data yet</h3>
-    <p>Run <code>python fetch_prices.py</code> to populate tracker.csv, then commit and push.<br>
-    The GitHub Action will auto-update Mon–Fri at 21:00 UTC.</p>
+    <p>Run <code>python fetch_prices.py</code> to populate tracker.csv, then commit and push.<br>The GitHub Action will auto-update Mon–Fri at 21:00 UTC.</p>
   </div>
 
-  <div id="dashboard" style="display:none">
-
-    <!-- Row 1: Bar chart + Line chart -->
+  <div id="dashboard" style="display: none;">
     <div class="grid-2">
       <div class="card">
         <h2>Performance since thesis start (% change)</h2>
-        <div class="chart-wrap tall"><canvas id="barChart"></canvas></div>
+        <div class="chart-wrap tall">
+          <canvas id="barChart"></canvas>
+        </div>
       </div>
       <div class="card">
         <h2>Cumulative performance over time</h2>
-        <div class="legend" id="lineLegend"></div>
-        <div class="chart-wrap short"><canvas id="lineChart"></canvas></div>
+        <div id="lineLegend" class="legend"></div>
+        <div class="chart-wrap tall">
+          <canvas id="lineChart"></canvas>
+        </div>
       </div>
     </div>
 
-    <!-- Row 2: Full-width summary table -->
     <div class="card">
       <h2>Summary table</h2>
       <div class="table-wrap">
@@ -239,66 +127,59 @@
         </table>
       </div>
     </div>
-
   </div>
 </main>
 
 <footer>
-  <strong>DISCLAIMER:</strong> This dashboard is for <strong>informational and educational purposes only</strong>.
-  Nothing here constitutes financial advice, investment recommendations, or solicitation to buy or sell any security.
-  Past performance is not indicative of future results. All investments involve risk, including possible loss of principal.
-  Data sourced via yfinance / Yahoo Finance — may be delayed or inaccurate. Always do your own research.
-  War status reflects manual assessment only and carries no predictive value.
+  <strong>DISCLAIMER:</strong> This dashboard is for <strong>informational and educational purposes only</strong>. Nothing here constitutes financial advice, investment recommendations, or solicitation to buy or sell any security. Past performance is not indicative of future results. All investments involve risk, including possible loss of principal. Data sourced via yfinance / Yahoo Finance — may be delayed or inaccurate. Always do your own research. War status reflects manual assessment only and carries no predictive value.
 </footer>
 
-<!-- ═══ SCRIPT ═══════════════════════════════════════════════════════════════ -->
 <script>
-// ── Asset metadata ────────────────────────────────────────────────────────────
 const ASSETS = {
-  USO:  { name: "US Oil Fund",                  cat: "Energy",    color: "#f97316" },
-  XLE:  { name: "Energy Select SPDR",           cat: "Energy",    color: "#f97316" },
-  XOM:  { name: "ExxonMobil",                   cat: "Energy",    color: "#f97316" },
-  CVX:  { name: "Chevron",                       cat: "Energy",    color: "#f97316" },
-  BWET: { name: "Breakwave Tanker ETF",          cat: "Tanker",    color: "#22d3ee" },
-  LNG:  { name: "Cheniere Energy (LNG)",         cat: "LNG",       color: "#10b981" },
-  LMT:  { name: "Lockheed Martin",               cat: "Defense",   color: "#60a5fa" },
-  NOC:  { name: "Northrop Grumman",              cat: "Defense",   color: "#60a5fa" },
-  RTX:  { name: "RTX Corp",                      cat: "Defense",   color: "#60a5fa" },
-  ITA:  { name: "iShares Aerospace & Defense",   cat: "Defense",   color: "#60a5fa" },
-  PLTR: { name: "Palantir (AI/Defense Intel)",   cat: "Defense",   color: "#60a5fa" },
-  KTOS: { name: "Kratos Defense",                cat: "Defense",   color: "#60a5fa" },
-  GLD:  { name: "SPDR Gold Shares",              cat: "Commodities", color: "#fbbf24" },
-  HGER: { name: "Harbor Commodity All-Weather",  cat: "Commodities", color: "#fbbf24" },
-  REMX: { name: "VanEck Rare Earth & Metals",    cat: "Commodities", color: "#fbbf24" },
-  SCO:  { name: "2× Inverse Crude (ceasefire)",  cat: "Hedge",     color: "#f87171" },
-  TAIL: { name: "Cambria Tail Risk ETF",         cat: "Hedge",     color: "#f87171" },
-  SPY:  { name: "S&P 500",                       cat: "Benchmark", color: "#9ca3af" },
-  QQQ:  { name: "Nasdaq 100",                    cat: "Benchmark", color: "#9ca3af" },
+  USO: { name: "US Oil Fund", cat: "Energy", color: "#f97316" },
+  XLE: { name: "Energy Select SPDR", cat: "Energy", color: "#f97316" },
+  XOM: { name: "ExxonMobil", cat: "Energy", color: "#f97316" },
+  CVX: { name: "Chevron", cat: "Energy", color: "#f97316" },
+  BWET: { name: "Breakwave Tanker ETF", cat: "Tanker", color: "#22d3ee" },
+  LNG: { name: "Cheniere Energy (LNG)", cat: "LNG", color: "#10b981" },
+  LMT: { name: "Lockheed Martin", cat: "Defense", color: "#60a5fa" },
+  NOC: { name: "Northrop Grumman", cat: "Defense", color: "#60a5fa" },
+  RTX: { name: "RTX Corp", cat: "Defense", color: "#60a5fa" },
+  ITA: { name: "iShares Aerospace & Defense", cat: "Defense", color: "#60a5fa" },
+  PLTR: { name: "Palantir (AI/Defense Intel)", cat: "Defense", color: "#60a5fa" },
+  KTOS: { name: "Kratos Defense", cat: "Defense", color: "#60a5fa" },
+  GLD: { name: "SPDR Gold Shares", cat: "Commodities", color: "#fbbf24" },
+  HGER: { name: "Harbor Commodity All-Weather", cat: "Commodities", color: "#fbbf24" },
+  REMX: { name: "VanEck Rare Earth & Metals", cat: "Commodities", color: "#fbbf24" },
+  SCO: { name: "2× Inverse Crude (ceasefire)", cat: "Hedge", color: "#f87171" },
+  TAIL: { name: "Cambria Tail Risk ETF", cat: "Hedge", color: "#f87171" },
+  SPY: { name: "S&P 500", cat: "Benchmark", color: "#9ca3af" },
+  QQQ: { name: "Nasdaq 100", cat: "Benchmark", color: "#9ca3af" },
 };
 
 const CAT_COLORS = {
-  Energy:      "#f97316",
-  Tanker:      "#22d3ee",
-  LNG:         "#10b981",
-  Defense:     "#60a5fa",
+  Energy: "#f97316",
+  Tanker: "#22d3ee",
+  LNG: "#10b981",
+  Defense: "#60a5fa",
   Commodities: "#fbbf24",
-  Hedge:       "#f87171",
-  Benchmark:   "#9ca3af",
+  Hedge: "#f87171",
+  Benchmark: "#9ca3af",
 };
 
-// ── War status ────────────────────────────────────────────────────────────────
 const WAR_STATES = [
-  { key: "escalating",   icon: "🔴", label: "ESCALATING",    cls: "escalating"   },
-  { key: "ceasefire",    icon: "🟡", label: "CEASEFIRE",     cls: "ceasefire"    },
+  { key: "escalating", icon: "🔴", label: "ESCALATING", cls: "escalating" },
+  { key: "ceasefire", icon: "🟡", label: "CEASEFIRE", cls: "ceasefire" },
   { key: "deescalating", icon: "🟢", label: "DE-ESCALATING", cls: "deescalating" },
 ];
+
 let warIdx = 0;
 
 function applyWarStatus() {
   const s = WAR_STATES[warIdx];
   const banner = document.getElementById("war-banner");
   banner.className = s.cls;
-  document.getElementById("war-icon").textContent  = s.icon;
+  document.getElementById("war-icon").textContent = s.icon;
   document.getElementById("war-label").textContent = s.label;
 }
 
@@ -317,21 +198,21 @@ function cycleWarStatus() {
   applyWarStatus();
 })();
 
-// ── CSV parser ────────────────────────────────────────────────────────────────
 function parseCSV(text) {
-  const lines  = text.trim().split("\n").filter(l => l.trim());
+  const lines = text.trim().split("\n").filter(l => l.trim());
   if (lines.length < 2) return { headers: [], rows: [] };
   const headers = lines[0].split(",").map(h => h.trim());
-  const rows    = lines.slice(1).map(line => {
+  const rows = lines.slice(1).map(line => {
     const vals = line.split(",");
-    const obj  = {};
-    headers.forEach((h, i) => { obj[h] = vals[i] ? vals[i].trim() : ""; });
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = vals[i] ? vals[i].trim() : "";
+    });
     return obj;
   });
   return { headers, rows };
 }
 
-// ── Maths ─────────────────────────────────────────────────────────────────────
 function pct(a, b) {
   if (!a || !b || isNaN(a) || isNaN(b) || b === 0) return null;
   return ((a - b) / b) * 100;
@@ -348,20 +229,16 @@ function fmtPct(v) {
   return `${sign}${v.toFixed(2)}%`;
 }
 
-// ── Charts ────────────────────────────────────────────────────────────────────
 let barChart, lineChart;
 
 function buildBarChart(tickers, pctChanges) {
-  // Sort descending by % change
   const sorted = tickers
     .map((t, i) => ({ ticker: t, pct: pctChanges[i] }))
     .filter(d => d.pct !== null)
     .sort((a, b) => b.pct - a.pct);
-
   const labels = sorted.map(d => d.ticker);
-  const data   = sorted.map(d => d.pct);
+  const data = sorted.map(d => d.pct);
   const colors = sorted.map(d => ASSETS[d.ticker]?.color ?? "#8b949e");
-
   const ctx = document.getElementById("barChart").getContext("2d");
   if (barChart) barChart.destroy();
   barChart = new Chart(ctx, {
@@ -414,17 +291,16 @@ function buildLineChart(dates, seriesMap) {
     const color = ASSETS[t]?.color ?? "#8b949e";
     const isIndex = ["SPY","QQQ"].includes(t);
     return {
-      label:       t,
-      data:        seriesMap[t],
+      label: t,
+      data: seriesMap[t],
       borderColor: color,
       backgroundColor: "transparent",
       borderWidth: isIndex ? 1.5 : 2,
-      borderDash:  isIndex ? [4,3] : [],
+      borderDash: isIndex ? [4,3] : [],
       pointRadius: 0,
-      tension:     0.2,
+      tension: 0.2,
     };
   });
-
   const ctx = document.getElementById("lineChart").getContext("2d");
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(ctx, {
@@ -446,26 +322,17 @@ function buildLineChart(dates, seriesMap) {
         x: {
           type: "category",
           grid: { color: "rgba(255,255,255,0.04)" },
-          ticks: {
-            color: "#8b949e",
-            maxTicksLimit: 8,
-            maxRotation: 0,
-          },
+          ticks: { color: "#8b949e", maxTicksLimit: 8, maxRotation: 0, },
           border: { color: "#30363d" }
         },
         y: {
           grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: {
-            color: "#8b949e",
-            callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%`
-          },
+          ticks: { color: "#8b949e", callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%` },
           border: { color: "#30363d" }
         }
       }
     }
   });
-
-  // Build custom legend
   const legend = document.getElementById("lineLegend");
   legend.innerHTML = "";
   tickers.forEach(t => {
@@ -478,24 +345,22 @@ function buildLineChart(dates, seriesMap) {
   });
 }
 
-// ── Table ─────────────────────────────────────────────────────────────────────
 function buildTable(tickers, baselineRow, latestRow, prevRow) {
   const tbody = document.getElementById("summaryBody");
   tbody.innerHTML = "";
-
   const sorted = tickers
     .map(t => {
-      const base  = parseFloat(baselineRow[t]);
-      const last  = parseFloat(latestRow[t]);
-      const prev  = prevRow ? parseFloat(prevRow[t]) : null;
+      const base = parseFloat(baselineRow[t]);
+      const last = parseFloat(latestRow[t]);
+      const prev = prevRow ? parseFloat(prevRow[t]) : null;
       return {
-        ticker:     t,
-        cat:        ASSETS[t]?.cat    ?? "—",
-        name:       ASSETS[t]?.name   ?? t,
-        color:      ASSETS[t]?.color  ?? "#8b949e",
-        price:      isNaN(last)  ? null : last,
-        todayPct:   pct(last, prev),
-        startPct:   pct(last, base),
+        ticker: t,
+        cat: ASSETS[t]?.cat ?? "—",
+        name: ASSETS[t]?.name ?? t,
+        color: ASSETS[t]?.color ?? "#8b949e",
+        price: isNaN(last) ? null : last,
+        todayPct: pct(last, prev),
+        startPct: pct(last, base),
       };
     })
     .sort((a, b) => {
@@ -504,13 +369,9 @@ function buildTable(tickers, baselineRow, latestRow, prevRow) {
       if (b.startPct === null) return -1;
       return b.startPct - a.startPct;
     });
-
   sorted.forEach(r => {
-    const todayCls = r.todayPct === null ? "neutral"
-                   : r.todayPct >= 0 ? "pos" : "neg";
-    const startCls = r.startPct === null ? "neutral"
-                   : r.startPct >= 0 ? "pos" : "neg";
-
+    const todayCls = r.todayPct === null ? "neutral" : r.todayPct >= 0 ? "pos" : "neg";
+    const startCls = r.startPct === null ? "neutral" : r.startPct >= 0 ? "pos" : "neg";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong style="font-family:monospace;color:${r.color}">${r.ticker}</strong></td>
@@ -528,7 +389,6 @@ function buildTable(tickers, baselineRow, latestRow, prevRow) {
   });
 }
 
-// ── Main loader ───────────────────────────────────────────────────────────────
 async function loadData() {
   let text;
   try {
@@ -540,33 +400,20 @@ async function loadData() {
     document.getElementById("no-data").style.display = "block";
     return;
   }
-
   const { headers, rows } = parseCSV(text);
   const dataRows = rows.filter(r => r.Date && Object.keys(ASSETS).some(t => r[t] && r[t] !== ""));
-
   if (dataRows.length === 0) {
     document.getElementById("no-data").style.display = "block";
     return;
   }
-
   document.getElementById("dashboard").style.display = "block";
-
-  const tickers    = Object.keys(ASSETS).filter(t => headers.includes(t));
+  const tickers = Object.keys(ASSETS).filter(t => headers.includes(t));
   const baselineRow = dataRows[0];
-  const latestRow   = dataRows[dataRows.length - 1];
-  const prevRow     = dataRows.length > 1 ? dataRows[dataRows.length - 2] : null;
-
-  // Update last updated
-  document.getElementById("last-updated").textContent =
-    `Last updated: ${latestRow.Date}`;
-
-  // ── Bar chart data
-  const pctChanges = tickers.map(t =>
-    pct(parseFloat(latestRow[t]), parseFloat(baselineRow[t]))
-  );
+  const latestRow = dataRows[dataRows.length - 1];
+  const prevRow = dataRows.length > 1 ? dataRows[dataRows.length - 2] : null;
+  document.getElementById("last-updated").textContent = `Last updated: ${latestRow.Date}`;
+  const pctChanges = tickers.map(t => pct(parseFloat(latestRow[t]), parseFloat(baselineRow[t])));
   buildBarChart(tickers, pctChanges);
-
-  // ── Line chart: cumulative % from baseline for each date
   const dates = dataRows.map(r => r.Date);
   const seriesMap = {};
   tickers.forEach(t => {
@@ -577,12 +424,11 @@ async function loadData() {
     });
   });
   buildLineChart(dates, seriesMap);
-
-  // ── Summary table
   buildTable(tickers, baselineRow, latestRow, prevRow);
 }
 
 document.addEventListener("DOMContentLoaded", loadData);
 </script>
+
 </body>
 </html>
