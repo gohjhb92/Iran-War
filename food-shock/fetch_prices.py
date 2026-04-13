@@ -19,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-START_DATE = "2026-04-13"
+START_DATE = "2026-02-28"
 
 ASSETS = {
     "WEAT": {"name": "Teucrium Wheat ETF",           "cat": "Agriculture",      "side": "LONG",      "target": "+20-40%",        "tf": "6-9 months"},

@@ -5,7 +5,7 @@ Fetches daily adjusted closing prices for all tracked assets via yfinance
 and writes/updates tracker.csv (root + docs/ copy for GitHub Pages).
 
 Usage:
-    python fetch_prices.py            # fetch from last known date → today
+    python fetch_prices.py            # fetch from last known date -> today
     python fetch_prices.py --full     # re-fetch full history from START_DATE
 """
 
@@ -20,7 +20,7 @@ import yfinance as yf
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-START_DATE = "2026-04-13"   # Thesis inception date
+START_DATE = "2026-02-28"   # Thesis inception date (Iran war start)
 
 TICKERS = [
     # Energy — Strait of Hormuz exposure
@@ -121,14 +121,14 @@ def main() -> None:
 
     if args.full or existing.empty:
         fetch_start = START_DATE
-        print(f"Full fetch: {fetch_start} → {today}")
+        print(f"Full fetch: {fetch_start} -> {today}")
     else:
         # Overlap by 2 days to catch late-arriving data / corrections
         last = existing.index[-1]
         fetch_start = (
             pd.Timestamp(last) - timedelta(days=2)
         ).strftime("%Y-%m-%d")
-        print(f"Incremental fetch: {fetch_start} → {today}")
+        print(f"Incremental fetch: {fetch_start} -> {today}")
 
     new_data = fetch_closes(fetch_start, end)
 
