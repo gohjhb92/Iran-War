@@ -42,8 +42,8 @@ ASSETS = {
 }
 
 VIX_TICKER = "^VIX"
-ROOT_CSV   = Path("tracker.csv")
-DOCS_CSV   = Path("docs") / "tracker.csv"
+ROOT_CSV  = Path("tracker.csv")
+DOCS_CSV  = Path("..") / "docs" / "food-shock" / "tracker.csv"
 
 
 def load_existing() -> pd.DataFrame:

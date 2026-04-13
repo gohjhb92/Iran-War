@@ -1,7 +1,7 @@
 # Food Shock Portfolio Tracker
 
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-GitHub_Pages-blue?logo=github)](https://gohjhb92.github.io/G1/food-shock/docs/)
-[![Auto-Update](https://img.shields.io/badge/Auto--Update-Mon--Fri_21:30_UTC-green?logo=github-actions)](../../actions/workflows/update.yml)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-GitHub_Pages-blue?logo=github)](https://gohjhb92.github.io/G1/food-shock/)
+[![Auto-Update](https://img.shields.io/badge/Auto--Update-Mon--Fri_21:30_UTC-green?logo=github-actions)](../actions/workflows/food-shock-update.yml)
 
 > **Thesis Credit:** Milkshakes, Markets & Madness — Santiago Capital
 > **Thesis Start:** 2026-04-13
@@ -74,19 +74,6 @@ Food inflation → EM instability → consumer spending shock
 | VIX | Below 20 | Buy VIXY/TAIL — dashboard alerts automatically |
 | UNG | Rally | Add to SHORT leg of spread |
 | ADM / BG | Pullback | Initiate LONG |
-
----
-
-## Setup
-
-```bash
-git clone https://github.com/gohjhb92/G1.git
-cd G1/food-shock
-pip install -r requirements.txt
-python fetch_prices.py
-```
-
-The GitHub Action `.github/workflows/update.yml` runs **Mon-Fri at 21:30 UTC** (5:30 pm ET) automatically.
 
 ---
 
