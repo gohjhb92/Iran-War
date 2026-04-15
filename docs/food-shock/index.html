@@ -4,175 +4,244 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food Shock Portfolio Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --bg: #080c10;
-  --surface: #161b22;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --green: #22c55e;
-  --yellow: #eab308;
-  --orange: #f97316;
-  --teal: #14b8a6;
-  --blue: #60a5fa;
-  --gold: #d97706;
-  --red: #f87171;
-  --gray: #9ca3af;
+  --bg:      #080b0e;
+  --surface: #0d1117;
+  --surface2:#111820;
+  --border:  #1a2530;
+  --border2: #243040;
+  --text:    #a8bcc8;
+  --dim:     #445560;
+  --white:   #ddeef5;
+  --green:   #00e676;
+  --amber:   #ffab00;
+  --red:     #ff1744;
+  --blue:    #29b6f6;
+  --teal:    #14b8a6;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
 }
 
-/* Ambient background glow */
-body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 120% 40% at 50% -5%, rgba(34,197,94,0.06), transparent); z-index: 0; }
+/* ── GRID OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,37,48,0.5) 39px, rgba(26,37,48,0.5) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,37,48,0.5) 39px, rgba(26,37,48,0.5) 40px);
+  pointer-events: none;
+  z-index: 0;
+}
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
-/* Sticky nav */
-nav.site-nav { position: sticky; top: 0; z-index: 100; background: rgba(8,12,16,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; padding: 0 20px; }
-nav.site-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; letter-spacing: 0.02em; }
+/* ── NAV ── */
+nav.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,11,14,0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  padding: 0 20px;
+}
+
+nav.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
 nav.site-nav a:hover { color: var(--text); }
 nav.site-nav a.active { color: var(--green); border-bottom-color: var(--green); }
-nav.site-nav a.war:hover { color: var(--orange); }
-@media (max-width: 860px) { nav.site-nav { flex-wrap: wrap; } }
+nav.site-nav a.war:hover { color: var(--red); }
 
+.nav-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── TIMELINE ── */
 #timeline {
-  background: #0a1a0a;
-  border-bottom: 1px solid #1a3a1a;
-  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 14px 20px;
   position: relative;
   z-index: 1;
 }
+
 #timeline h3 {
-  font-size: 0.7rem;
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
   text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 8px;
+  letter-spacing: 0.24em;
+  margin-bottom: 12px;
 }
+
 .phases {
   display: flex;
   gap: 0;
   flex-wrap: wrap;
-  position: relative;
 }
+
 .phase {
   flex: 1;
   min-width: 180px;
-  padding: 10px 14px;
-  border-left: 3px solid var(--border);
+  padding: 10px 16px;
+  border-left: 2px solid var(--border2);
   transition: opacity 0.2s;
 }
+
 .phase.active {
   border-left-color: var(--green);
-  background: rgba(34,197,94,.06);
-  box-shadow: inset 3px 0 0 var(--green), 0 0 16px rgba(34,197,94,0.07);
-}
-.phase:not(.active) {
-  opacity: 0.45;
-}
-.phase-label {
-  font-size: .7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-.phase.active .phase-label {
-  color: var(--green);
-}
-.phase:not(.active) .phase-label {
-  color: var(--muted);
-}
-.phase-title {
-  font-size: .82rem;
-  font-weight: 600;
-  margin: 2px 0;
-}
-.phase-time {
-  font-size: .7rem;
-  color: var(--muted);
-}
-.phase.active .phase-title {
-  color: var(--text);
-}
-.phase:not(.active) .phase-title {
-  color: #4b5563;
-}
-#timeline .hint {
-  text-align: center;
-  font-size: .72rem;
-  color: var(--muted);
-  margin-top: 8px;
+  background: rgba(0,230,118,0.04);
 }
 
+.phase:not(.active) { opacity: 0.4; }
+
+.phase-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+}
+
+.phase.active .phase-label { color: var(--green); }
+.phase:not(.active) .phase-label { color: var(--dim); }
+
+.phase-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+
+.phase:not(.active) .phase-title { color: var(--dim); }
+
+.phase-time {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+}
+
+#timeline .hint {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.1em;
+  margin-top: 10px;
+}
+
+/* ── WAR BANNER ── */
 #war-banner {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 9px 20px;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: .12em;
+  padding: 9px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   cursor: pointer;
   user-select: none;
-  transition: background .2s;
+  transition: background 0.2s;
   position: relative;
   z-index: 1;
 }
+
 #war-banner.escalating {
-  background:#3b0a0a;
-  color:#f87171;
-  border-bottom:2px solid #f87171;
+  background: rgba(255,23,68,0.08);
+  color: var(--red);
+  border-bottom: 1px solid rgba(255,23,68,0.3);
   animation: banner-pulse 2.5s ease-in-out infinite;
 }
 #war-banner.ceasefire {
-  background:#2d2506;
-  color:#fbbf24;
-  border-bottom:2px solid #fbbf24;
+  background: rgba(255,171,0,0.06);
+  color: var(--amber);
+  border-bottom: 1px solid rgba(255,171,0,0.3);
 }
 #war-banner.monitoring {
-  background:#0f172a;
-  color:#60a5fa;
-  border-bottom:2px solid #60a5fa;
+  background: rgba(41,182,246,0.05);
+  color: var(--blue);
+  border-bottom: 1px solid rgba(41,182,246,0.2);
 }
-#war-banner .hint {
-  font-size:.65rem;
-  font-weight:400;
-  opacity:.6;
-  letter-spacing: 0.02em;
-}
-@keyframes banner-pulse { 0%,100% { box-shadow: inset 0 0 0 rgba(248,113,113,0); } 50% { box-shadow: inset 0 0 40px rgba(248,113,113,0.1); } }
 
+.banner-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
+}
+
+.banner-hint {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.5;
+  letter-spacing: 0.1em;
+}
+
+@keyframes banner-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: inset 0 0 40px rgba(255,23,68,0.06); }
+}
+
+/* ── VIX ALERT ── */
 #vix-alert {
   display: none;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 10px 20px;
-  background: #1a0a2e;
-  border-bottom: 2px solid #a78bfa;
+  background: rgba(167,139,250,0.06);
+  border-bottom: 1px solid rgba(167,139,250,0.3);
   color: #a78bfa;
-  font-weight: 700;
-  font-size: .9rem;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   animation: pulse 2s infinite;
   position: relative;
   z-index: 1;
 }
-@keyframes pulse {
-  0%,100%{opacity:1}
-  50%{opacity:.6}
-}
 
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* ── HEADER ── */
 header {
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 20px;
+  border-bottom: 1px solid var(--border2);
+  padding: 16px 24px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -180,31 +249,98 @@ header {
   position: relative;
   z-index: 1;
 }
+
 .header-title {
   flex: 1;
   min-width: 200px;
   border-left: 3px solid var(--green);
   padding-left: 14px;
 }
+
 .header-title h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: linear-gradient(90deg, #22c55e, #14b8a6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--white);
 }
+
 .header-title p {
-  color: var(--muted);
-  font-size: .78rem;
-  margin-top: 3px;
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
 }
+
 #last-updated {
-  color: var(--muted);
-  font-size: .72rem;
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
+/* ── FILTER BAR ── */
+#filter-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 10px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.filter-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.chip {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  padding: 3px 10px;
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip:hover { border-color: var(--text); color: var(--text); }
+.chip.active-chip { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.05); }
+
+.filter-select {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 0;
+  color: var(--text);
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  outline: none;
+}
+.filter-select:focus { border-color: var(--green); }
+
+.filter-divider { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+
+/* ── MAIN ── */
 main {
   max-width: 1400px;
   margin: 0 auto;
@@ -212,226 +348,181 @@ main {
   position: relative;
   z-index: 1;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
-@media(max-width:860px){
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
+
+@media (max-width: 860px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  nav.site-nav { flex-wrap: wrap; }
 }
+
+/* ── CARDS ── */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  transition: box-shadow 0.2s;
+  border: 1px solid var(--border2);
+  padding: 16px;
+  transition: border-color 0.2s;
 }
-.card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
-}
+
+.card:hover { border-color: var(--blue); }
+
 .card h2 {
-  font-size: .78rem;
-  font-weight: 600;
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--dim);
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: 0.22em;
   padding-bottom: 10px;
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border2);
 }
-.chart-wrap {
-  position: relative;
-  width: 100%;
-}
-.chart-wrap.tall {
-  height: 420px;
-}
-.chart-wrap.short {
-  height: 320px;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: .72rem;
-  color: var(--muted);
-}
-.legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.table-wrap {
-  overflow-x: auto;
-}
+
+/* ── CHARTS ── */
+.chart-wrap { position: relative; width: 100%; }
+.chart-wrap.tall  { height: 420px; }
+.chart-wrap.short { height: 320px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--dim); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: .8rem;
+  font-size: 12px;
+  font-family: var(--mono);
 }
+
 thead tr { border-top: 2px solid var(--green); }
+
 thead th {
   background: var(--bg);
-  color: var(--muted);
-  font-weight: 600;
+  color: var(--dim);
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: .05em;
-  font-size: .68rem;
+  letter-spacing: 0.14em;
+  font-size: 9px;
   padding: 7px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border2);
   white-space: nowrap;
 }
-thead th.num {
-  text-align: right;
-}
-tbody tr {
-  border-bottom: 1px solid var(--border);
-}
+
+thead th.num { text-align: right; }
+
+tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
-tbody tr:hover {
-  background: rgba(255,255,255,.04);
-}
-tbody td {
-  padding: 6px 10px;
-  white-space: nowrap;
-}
-tbody td.num {
-  text-align: right;
-  font-family: "SF Mono","Fira Code",monospace;
-}
-.pos {
-  color: #4ade80;
-}
-.neg {
-  color: #f87171;
-}
-.neutral {
-  color: var(--muted);
-}
+tbody tr:hover { background: rgba(0,230,118,0.03); }
+
+tbody td { padding: 6px 10px; white-space: nowrap; }
+tbody td.num { text-align: right; font-family: var(--mono); }
+
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neutral { color: var(--dim); }
+
 .badge {
   display: inline-block;
-  padding: 2px 9px;
-  border-radius: 6px;
-  font-size: .65rem;
-  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.badge-long {
-  background:#052e16;
-  color:#4ade80;
-}
-.badge-short {
-  background:#3b0a0a;
-  color:#f87171;
-}
-.badge-watch {
-  background:#1c1c07;
-  color:#fbbf24;
-}
-.badge-benchmark {
-  background:#1a1a1a;
-  color:#9ca3af;
-}
-/* Filter bar */
-#filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; position: relative; z-index: 1; }
-.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.filter-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
-.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.chip { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em; }
-.chip:hover { border-color: var(--text); color: var(--text); }
-.chip.active-chip { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.1); }
-.filter-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; outline: none; }
-.filter-select:focus { border-color: var(--green); }
-.filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 
+.badge-long      { background: rgba(0,230,118,0.08);  color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+.badge-short     { background: rgba(255,23,68,0.08);   color: var(--red);   border: 1px solid rgba(255,23,68,0.25); }
+.badge-watch     { background: rgba(255,171,0,0.08);   color: var(--amber); border: 1px solid rgba(255,171,0,0.25); }
+.badge-benchmark { background: rgba(68,85,96,0.3);     color: var(--dim);   border: 1px solid var(--border2); }
+
+/* ── NO DATA ── */
 #no-data {
-  display:none;
-  padding:48px;
-  text-align:center;
-  color:var(--muted);
+  display: none;
+  padding: 48px;
+  text-align: center;
+  color: var(--dim);
 }
-#no-data h3 {
-  font-size:1.1rem;
-  margin-bottom:8px;
-  color:var(--text);
-}
+#no-data h3 { font-size: 14px; margin-bottom: 8px; color: var(--text); }
 code {
-  background:#1c2128;
-  padding:2px 6px;
-  border-radius:4px;
-  font-size:.85em;
+  background: var(--surface2);
+  padding: 2px 6px;
+  font-family: var(--mono);
+  font-size: 0.85em;
 }
+
+/* ── FOOTER ── */
 footer {
-  border-top:1px solid var(--border);
-  padding:14px 20px;
-  color:var(--muted);
-  font-size:.68rem;
-  text-align:center;
-  line-height:1.7;
-  font-style: italic;
-  background: linear-gradient(to bottom, var(--bg), #05070a);
+  border-top: 1px solid var(--border2);
+  padding: 14px 24px;
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.7;
   position: relative;
   z-index: 1;
 }
-footer strong {
-  color:var(--text);
-  font-style: normal;
-}
+footer strong { color: var(--text); }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="../" class="war">🔴 Iran War Tracker</a>
-  <a href="./" class="active">🌾 Food Shock Tracker</a>
+  <a href="../" class="war">
+    <span class="nav-dot" style="background:var(--dim)"></span>
+    Iran War Tracker
+  </a>
+  <a href="./" class="active">
+    <span class="nav-dot" style="background:var(--green);box-shadow:0 0 5px var(--green)"></span>
+    Food Shock Tracker
+  </a>
 </nav>
 
 <div id="timeline">
-  <h3>Food Shock Thesis Timeline — from 2026-02-28</h3>
+  <h3>// Food Shock Thesis Timeline — from 2026-02-28</h3>
   <div class="phases">
     <div class="phase active" id="phase1">
       <div class="phase-label">Phase 1 — NOW</div>
-      <div class="phase-title">Fertilizer & Diesel Constraints</div>
-      <div class="phase-time">Months 1–3 · Play: CF, NTR, MOS</div>
+      <div class="phase-title">Fertilizer &amp; Diesel Constraints</div>
+      <div class="phase-time">Months 1–3 &nbsp;·&nbsp; Play: CF, NTR, MOS</div>
     </div>
     <div class="phase" id="phase2">
       <div class="phase-label">Phase 2</div>
       <div class="phase-title">Crop Yield Shortfalls</div>
-      <div class="phase-time">Months 6–9 · Play: WEAT, CORN, DBA</div>
+      <div class="phase-time">Months 6–9 &nbsp;·&nbsp; Play: WEAT, CORN, DBA</div>
     </div>
     <div class="phase" id="phase3">
       <div class="phase-label">Phase 3</div>
       <div class="phase-title">Food Inflation Spike</div>
-      <div class="phase-time">Months 9–12 · Play: ADM, BG, PDBA</div>
+      <div class="phase-time">Months 9–12 &nbsp;·&nbsp; Play: ADM, BG, PDBA</div>
     </div>
   </div>
-  <div class="hint">(click banner below to toggle conflict status)</div>
+  <div class="hint">// click banner below to toggle conflict status</div>
 </div>
 
 <div id="war-banner" class="monitoring" onclick="cycleStatus()">
-  <span id="war-icon">🔵</span>
+  <span class="banner-dot"></span>
   <span id="war-label">MONITORING</span>
-  <span class="hint">Click to cycle</span>
+  <span class="banner-hint">(click to cycle)</span>
 </div>
 
-<div id="vix-alert">⚡ VIX BELOW 20 — Hedge buying opportunity. Consider VIXY / TAIL positions.</div>
+<div id="vix-alert">&#9889; VIX BELOW 20 — Hedge buying opportunity. Consider VIXY / TAIL positions.</div>
 
 <header>
   <div class="header-title">
     <h1>Food Shock Portfolio Tracker</h1>
-    <p>Thesis: Santiago Capital · Post-ceasefire delayed energy→fertilizer→food transmission · Start: 2026-02-28</p>
+    <p>// Thesis: Santiago Capital &nbsp;·&nbsp; Post-ceasefire delayed energy→fertilizer→food transmission &nbsp;·&nbsp; Start: 2026-02-28</p>
   </div>
   <div id="last-updated"></div>
 </header>
@@ -479,13 +570,13 @@ footer strong {
   <div id="dashboard" style="display:none;">
     <div class="grid-2">
       <div class="card">
-        <h2>% Change since thesis start (2026-02-28)</h2>
+        <h2>// % Change since thesis start (2026-02-28)</h2>
         <div class="chart-wrap short">
           <canvas id="barChart"></canvas>
         </div>
       </div>
       <div class="card">
-        <h2>Cumulative performance by category</h2>
+        <h2>// Cumulative performance by category</h2>
         <div id="lineLegend" class="legend"></div>
         <div class="chart-wrap short">
           <canvas id="lineChart"></canvas>
@@ -494,7 +585,7 @@ footer strong {
     </div>
 
     <div class="card">
-      <h2>Summary — all positions</h2>
+      <h2>// Summary — all positions</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -524,40 +615,35 @@ footer strong {
 </main>
 
 <footer>
-  <strong>DISCLAIMER:</strong> Informational and educational purposes only. Not financial advice. Past performance does not guarantee future results. Data via Yahoo Finance / yfinance. Thesis credit: Milkshakes, Markets & Madness (Santiago Capital). Always consult a licensed financial advisor.
+  <strong>DISCLAIMER:</strong> Informational and educational purposes only. Not financial advice. Past performance does not guarantee future results. Data via Yahoo Finance / yfinance. Thesis credit: Milkshakes, Markets &amp; Madness (Santiago Capital). Always consult a licensed financial advisor.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ASSETS={
-  WEAT:{name:"Teucrium Wheat ETF",cat:"Agriculture",side:"LONG",target:"+20-40%",tf:"6-9 mo",color:"#22c55e"},
-  CORN:{name:"Teucrium Corn ETF",cat:"Agriculture",side:"LONG",target:"+15-30%",tf:"6-9 mo",color:"#22c55e"},
-  CF:{name:"CF Industries",cat:"Fertilizer",side:"LONG",target:"momentum",tf:"1-3 mo",color:"#eab308"},
-  NTR:{name:"Nutrien",cat:"Fertilizer",side:"LONG",target:"+20%",tf:"1-3 mo",color:"#eab308"},
-  MOS:{name:"Mosaic",cat:"Fertilizer",side:"LONG",target:"+25%",tf:"1-3 mo",color:"#eab308"},
-  DBA:{name:"Invesco DB Agriculture ETF",cat:"Soft Commodities",side:"LONG",target:"+15%",tf:"6-9 mo",color:"#f97316"},
-  PDBA:{name:"Invesco Agriculture ETF (noK1)",cat:"Soft Commodities",side:"LONG",target:"+15%",tf:"6-9 mo",color:"#f97316"},
-  ADM:{name:"Archer-Daniels-Midland",cat:"Merchants",side:"WATCH",target:"pullback entry",tf:"TBD",color:"#14b8a6"},
-  BG:{name:"Bunge",cat:"Merchants",side:"WATCH",target:"pullback entry",tf:"TBD",color:"#14b8a6"},
-  UNG:{name:"US Natural Gas ETF",cat:"Natural Gas",side:"SHORT",target:"-20%",tf:"spread",color:"#60a5fa"},
-  GLD:{name:"SPDR Gold Shares",cat:"Metals",side:"WATCH",target:"low $4,000s",tf:"200DMA",color:"#d97706"},
-  SLV:{name:"iShares Silver Trust",cat:"Metals",side:"WATCH",target:"~$60",tf:"200DMA",color:"#d97706"},
-  XLY:{name:"Consumer Discretionary ETF",cat:"Hedge/Short",side:"SHORT",target:"-15%",tf:"6-9 mo",color:"#f87171"},
-  VIXY:{name:"ProShares VIX ETF",cat:"Hedge/Short",side:"WATCH",target:"VIX < 20",tf:"tactical",color:"#f87171"},
-  SPY:{name:"S&P 500",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"},
-  QQQ:{name:"Nasdaq 100",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"},
-  DIA:{name:"Dow Jones ETF",cat:"Benchmark",side:"BENCHMARK",target:"200DMA resist.",tf:"N/A",color:"#9ca3af"}
+  WEAT:{name:"Teucrium Wheat ETF",          cat:"Agriculture",      side:"LONG",      target:"+20-40%",     tf:"6-9 mo",  color:"#22c55e"},
+  CORN:{name:"Teucrium Corn ETF",            cat:"Agriculture",      side:"LONG",      target:"+15-30%",     tf:"6-9 mo",  color:"#22c55e"},
+  CF:  {name:"CF Industries",               cat:"Fertilizer",       side:"LONG",      target:"momentum",    tf:"1-3 mo",  color:"#eab308"},
+  NTR: {name:"Nutrien",                     cat:"Fertilizer",       side:"LONG",      target:"+20%",        tf:"1-3 mo",  color:"#eab308"},
+  MOS: {name:"Mosaic",                      cat:"Fertilizer",       side:"LONG",      target:"+25%",        tf:"1-3 mo",  color:"#eab308"},
+  DBA: {name:"Invesco DB Agriculture ETF",  cat:"Soft Commodities", side:"LONG",      target:"+15%",        tf:"6-9 mo",  color:"#f97316"},
+  PDBA:{name:"Invesco Agriculture ETF (noK1)",cat:"Soft Commodities",side:"LONG",     target:"+15%",        tf:"6-9 mo",  color:"#f97316"},
+  ADM: {name:"Archer-Daniels-Midland",      cat:"Merchants",        side:"WATCH",     target:"pullback entry",tf:"TBD",   color:"#14b8a6"},
+  BG:  {name:"Bunge",                       cat:"Merchants",        side:"WATCH",     target:"pullback entry",tf:"TBD",   color:"#14b8a6"},
+  UNG: {name:"US Natural Gas ETF",          cat:"Natural Gas",      side:"SHORT",     target:"-20%",        tf:"spread",  color:"#60a5fa"},
+  GLD: {name:"SPDR Gold Shares",            cat:"Metals",           side:"WATCH",     target:"low $4,000s", tf:"200DMA",  color:"#d97706"},
+  SLV: {name:"iShares Silver Trust",        cat:"Metals",           side:"WATCH",     target:"~$60",        tf:"200DMA",  color:"#d97706"},
+  XLY: {name:"Consumer Discretionary ETF", cat:"Hedge/Short",      side:"SHORT",     target:"-15%",        tf:"6-9 mo",  color:"#f87171"},
+  VIXY:{name:"ProShares VIX ETF",           cat:"Hedge/Short",      side:"WATCH",     target:"VIX < 20",    tf:"tactical",color:"#f87171"},
+  SPY: {name:"S&P 500",                     cat:"Benchmark",        side:"BENCHMARK", target:"200DMA resist.",tf:"N/A",  color:"#9ca3af"},
+  QQQ: {name:"Nasdaq 100",                  cat:"Benchmark",        side:"BENCHMARK", target:"200DMA resist.",tf:"N/A",  color:"#9ca3af"},
+  DIA: {name:"Dow Jones ETF",               cat:"Benchmark",        side:"BENCHMARK", target:"200DMA resist.",tf:"N/A",  color:"#9ca3af"}
 };
 
 const CAT_COLORS={
-  "Agriculture":"#22c55e",
-  "Fertilizer":"#eab308",
-  "Soft Commodities":"#f97316",
-  "Merchants":"#14b8a6",
-  "Natural Gas":"#60a5fa",
-  "Metals":"#d97706",
-  "Hedge/Short":"#f87171",
-  "Benchmark":"#9ca3af"
+  "Agriculture":"#22c55e","Fertilizer":"#eab308","Soft Commodities":"#f97316",
+  "Merchants":"#14b8a6","Natural Gas":"#60a5fa","Metals":"#d97706",
+  "Hedge/Short":"#f87171","Benchmark":"#9ca3af"
 };
 
 (function(){
@@ -568,9 +654,9 @@ const CAT_COLORS={
 })();
 
 const STATUSES=[
-  {key:"escalating",icon:"🔴",label:"ESCALATING",cls:"escalating"},
-  {key:"ceasefire",icon:"🟡",label:"CEASEFIRE",cls:"ceasefire"},
-  {key:"monitoring",icon:"🔵",label:"MONITORING",cls:"monitoring"}
+  {key:"escalating", label:"ESCALATING", cls:"escalating"},
+  {key:"ceasefire",  label:"CEASEFIRE",  cls:"ceasefire"},
+  {key:"monitoring", label:"MONITORING", cls:"monitoring"}
 ];
 
 let statusIdx=1;
@@ -578,7 +664,6 @@ let statusIdx=1;
 function applyStatus(){
   const s=STATUSES[statusIdx],b=document.getElementById("war-banner");
   b.className=s.cls;
-  document.getElementById("war-icon").textContent=s.icon;
   document.getElementById("war-label").textContent=s.label;
 }
 
@@ -590,10 +675,7 @@ function cycleStatus(){
 
 (function(){
   const s=localStorage.getItem("warStatus2");
-  if(s){
-    const i=STATUSES.findIndex(x=>x.key===s);
-    if(i>=0)statusIdx=i;
-  }
+  if(s){const i=STATUSES.findIndex(x=>x.key===s);if(i>=0)statusIdx=i;}
   applyStatus();
 })();
 
@@ -619,69 +701,61 @@ function groupByTicker(rows){
   return g;
 }
 
-function pct(a,b){
-  if(!a||!b||b===0)return null;
-  return(a-b)/b*100;
-}
-
-function fmt(v,d=2){
-  if(v==null||isNaN(v))return"—";
-  return v.toFixed(d);
-}
-
-function fmtPct(v){
-  if(v==null||isNaN(v))return"—";
-  return(v>=0?"+":"")+v.toFixed(2)+"%";
-}
+function pct(a,b){if(!a||!b||b===0)return null;return(a-b)/b*100;}
+function fmt(v,d=2){if(v==null||isNaN(v))return"—";return v.toFixed(d);}
+function fmtPct(v){if(v==null||isNaN(v))return"—";return(v>=0?"+":"")+v.toFixed(2)+"%";}
 
 let barC, lineC;
+let gByTicker={}, gTickers=[];
+let gActiveCat="all", gActiveSide="all", gActiveSort="start_desc";
 
-// ── Global data store for reactive filtering ──
-let gByTicker = {}, gTickers = [];
-let gActiveCat = "all", gActiveSide = "all", gActiveSort = "start_desc";
-
-function getFilteredTickers() {
-  return gTickers.filter(t => {
-    if (gActiveCat  !== "all" && ASSETS[t]?.cat  !== gActiveCat)  return false;
-    if (gActiveSide !== "all" && ASSETS[t]?.side !== gActiveSide) return false;
+function getFilteredTickers(){
+  return gTickers.filter(t=>{
+    if(gActiveCat!=="all"&&ASSETS[t]?.cat!==gActiveCat)return false;
+    if(gActiveSide!=="all"&&ASSETS[t]?.side!==gActiveSide)return false;
     return true;
   });
 }
 
-function applyFilters() {
-  const tickers = getFilteredTickers();
-  buildBar(tickers, gByTicker);
-  buildLine(gByTicker, tickers);
-  buildTable(tickers, gByTicker, gActiveSort);
+function applyFilters(){
+  const tickers=getFilteredTickers();
+  buildBar(tickers,gByTicker);
+  buildLine(gByTicker,tickers);
+  buildTable(tickers,gByTicker,gActiveSort);
 }
 
-function initFilters() {
-  document.getElementById("catChips").addEventListener("click", e => {
-    const btn = e.target.closest(".chip");
-    if (!btn) return;
-    document.querySelectorAll("#catChips .chip").forEach(c => c.classList.remove("active-chip"));
-    btn.classList.add("active-chip");
-    gActiveCat = btn.dataset.cat;
-    applyFilters();
+function initFilters(){
+  document.getElementById("catChips").addEventListener("click",e=>{
+    const btn=e.target.closest(".chip");if(!btn)return;
+    document.querySelectorAll("#catChips .chip").forEach(c=>c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");gActiveCat=btn.dataset.cat;applyFilters();
   });
-  document.getElementById("sideChips").addEventListener("click", e => {
-    const btn = e.target.closest(".chip");
-    if (!btn) return;
-    document.querySelectorAll("#sideChips .chip").forEach(c => c.classList.remove("active-chip"));
-    btn.classList.add("active-chip");
-    gActiveSide = btn.dataset.side;
-    applyFilters();
+  document.getElementById("sideChips").addEventListener("click",e=>{
+    const btn=e.target.closest(".chip");if(!btn)return;
+    document.querySelectorAll("#sideChips .chip").forEach(c=>c.classList.remove("active-chip"));
+    btn.classList.add("active-chip");gActiveSide=btn.dataset.side;applyFilters();
   });
-  document.getElementById("sortSelect").addEventListener("change", e => {
-    gActiveSort = e.target.value;
-    applyFilters();
-  });
+  document.getElementById("sortSelect").addEventListener("change",e=>{gActiveSort=e.target.value;applyFilters();});
 }
+
+const CHART_OPTS = {
+  tooltip: {
+    backgroundColor: "#0d1117",
+    borderColor: "#243040",
+    borderWidth: 1,
+    titleColor: "#ddeef5",
+    bodyColor: "#a8bcc8",
+  },
+  gridColor: "rgba(36,48,64,0.8)",
+  gridColorLight: "rgba(36,48,64,0.5)",
+  tickColor: "#445560",
+  tickFont: { family: "'IBM Plex Mono'", size: 11 },
+};
 
 function buildBar(tickers,byTicker){
   const items=tickers.filter(t=>byTicker[t]&&byTicker[t].length>=1).map(t=>{
     const a=byTicker[t],base=a[0].close,last=a[a.length-1].close;
-    return{t,p:pct(last,base),color:ASSETS[t]?.color||"#8b949e"};
+    return{t,p:pct(last,base),color:ASSETS[t]?.color||"#445560"};
   }).filter(d=>d.p!==null).sort((a,b)=>b.p-a.p);
 
   const ctx=document.getElementById("barChart").getContext("2d");
@@ -692,19 +766,18 @@ function buildBar(tickers,byTicker){
       labels:items.map(d=>d.t),
       datasets:[{
         data:items.map(d=>d.p),
-        backgroundColor:items.map(d=>d.color+"bb"),
+        backgroundColor:items.map(d=>d.color+"99"),
         borderColor:items.map(d=>d.color),
         borderWidth:1,
-        borderRadius:3
+        borderRadius:0
       }]
     },
     options:{
-      indexAxis:"y",
-      responsive:true,
-      maintainAspectRatio:false,
+      indexAxis:"y",responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
         tooltip:{
+          ...CHART_OPTS.tooltip,
           callbacks:{
             label:c=>fmtPct(c.parsed.x),
             title:c=>`${c[0].label} — ${ASSETS[c[0].label]?.name||""}`
@@ -712,27 +785,18 @@ function buildBar(tickers,byTicker){
         }
       },
       scales:{
-        x:{
-          grid:{color:"rgba(255,255,255,.06)"},
-          border:{color:"#30363d"},
-          ticks:{color:"#8b949e",callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}
-        },
-        y:{
-          grid:{display:false},
-          border:{color:"#30363d"},
-          ticks:{color:"#e6edf3",font:{family:"monospace",size:12}}
-        }
+        x:{grid:{color:CHART_OPTS.gridColor},border:{color:"#243040"},ticks:{color:CHART_OPTS.tickColor,font:CHART_OPTS.tickFont,callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}},
+        y:{grid:{display:false},border:{color:"#243040"},ticks:{color:"#ddeef5",font:{family:"'IBM Plex Mono'",size:12}}}
       }
     }
   });
 }
 
-function buildLine(byTicker, filteredTickers){
-  const allowed = new Set(filteredTickers || Object.keys(byTicker));
+function buildLine(byTicker,filteredTickers){
+  const allowed=new Set(filteredTickers||Object.keys(byTicker));
   const catD={},catC={};
   Object.keys(byTicker).filter(t=>allowed.has(t)).forEach(t=>{
-    const cat=ASSETS[t]?.cat;
-    if(!cat||cat==="Benchmark")return;
+    const cat=ASSETS[t]?.cat;if(!cat||cat==="Benchmark")return;
     byTicker[t].forEach(pt=>{
       const base=byTicker[t][0].close,p=pct(pt.close,base);
       if(!catD[cat]){catD[cat]={};catC[cat]={}}
@@ -740,60 +804,45 @@ function buildLine(byTicker, filteredTickers){
       catC[cat][pt.date]=(catC[cat][pt.date]||0)+1;
     });
   });
-
   if(byTicker["SPY"]){
-    catD["S&P 500 (ref)"]={};
-    catC["S&P 500 (ref)"]={};
+    catD["S&P 500 (ref)"]={};catC["S&P 500 (ref)"]={};
     byTicker["SPY"].forEach(pt=>{
       catD["S&P 500 (ref)"][pt.date]=pct(pt.close,byTicker["SPY"][0].close);
       catC["S&P 500 (ref)"][pt.date]=1;
     });
   }
-
   const allDates=[...new Set(Object.values(catD).flatMap(d=>Object.keys(d)))].sort();
   const datasets=Object.keys(catD).map(cat=>{
-    const color=cat==="S&P 500 (ref)"?"#9ca3af":(CAT_COLORS[cat]||"#8b949e");
+    const color=cat==="S&P 500 (ref)"?"#445560":(CAT_COLORS[cat]||"#445560");
     return{
       label:cat,
       data:allDates.map(d=>{const sum=catD[cat][d],cnt=catC[cat]?.[d];return(sum!=null&&cnt)?sum/cnt:null;}),
-      borderColor:color,
-      backgroundColor:"transparent",
+      borderColor:color,backgroundColor:"transparent",
       borderWidth:cat==="S&P 500 (ref)"?1.5:2,
       borderDash:cat==="S&P 500 (ref)"?[4,3]:[],
-      pointRadius:0,
-      tension:0.2,
-      spanGaps:true
+      pointRadius:0,tension:0.2,spanGaps:true
     };
   });
-
   const ctx=document.getElementById("lineChart").getContext("2d");
   if(lineC)lineC.destroy();
   lineC=new Chart(ctx,{
-    type:"line",
-    data:{labels:allDates,datasets},
+    type:"line",data:{labels:allDates,datasets},
     options:{
-      responsive:true,
-      maintainAspectRatio:false,
+      responsive:true,maintainAspectRatio:false,
       interaction:{mode:"index",intersect:false},
       plugins:{
         legend:{display:false},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPct(c.parsed.y)}`}}
+        tooltip:{
+          ...CHART_OPTS.tooltip,
+          callbacks:{label:c=>`${c.dataset.label}: ${fmtPct(c.parsed.y)}`}
+        }
       },
       scales:{
-        x:{
-          grid:{color:"rgba(255,255,255,.04)"},
-          border:{color:"#30363d"},
-          ticks:{color:"#8b949e",maxTicksLimit:8,maxRotation:0}
-        },
-        y:{
-          grid:{color:"rgba(255,255,255,.06)"},
-          border:{color:"#30363d"},
-          ticks:{color:"#8b949e",callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}
-        }
+        x:{grid:{color:CHART_OPTS.gridColorLight},border:{color:"#243040"},ticks:{color:CHART_OPTS.tickColor,font:{family:"'IBM Plex Mono'",size:10},maxTicksLimit:8,maxRotation:0}},
+        y:{grid:{color:CHART_OPTS.gridColor},border:{color:"#243040"},ticks:{color:CHART_OPTS.tickColor,font:CHART_OPTS.tickFont,callback:v=>(v>=0?"+":"")+v.toFixed(0)+"%"}}
       }
     }
   });
-
   const legend=document.getElementById("lineLegend");
   legend.innerHTML="";
   datasets.forEach(ds=>{
@@ -801,7 +850,7 @@ function buildLine(byTicker, filteredTickers){
   });
 }
 
-function buildTable(tickers, byTicker, sortKey="start_desc"){
+function buildTable(tickers,byTicker,sortKey="start_desc"){
   const tbody=document.getElementById("summaryBody");
   tbody.innerHTML="";
   const rows=tickers.filter(t=>byTicker[t]).map(t=>{
@@ -816,10 +865,22 @@ function buildTable(tickers, byTicker, sortKey="start_desc"){
     az:        (a,b)=>a.t.localeCompare(b.t),
   };
   rows.sort(sorters[sortKey]??sorters.start_desc);
-
   rows.forEach(r=>{
-    const tc=v=>v==null?"neutral":v>=0?"pos":"neg",sideCls={LONG:"badge-long",SHORT:"badge-short",WATCH:"badge-watch",BENCHMARK:"badge-benchmark"},color=r.meta.color||"#8b949e",tr=document.createElement("tr");
-    tr.innerHTML=`<td><strong style="font-family:monospace;color:${color}">${r.t}</strong></td><td style="color:#8b949e;font-size:.78rem">${r.meta.name||r.t}</td><td><span class="badge ${sideCls[r.meta.side]||'badge-watch'}">${r.meta.side||'WATCH'}</span></td><td><span style="font-size:.72rem;color:${color}">${r.meta.cat||'—'}</span></td><td class="num">${r.price!=null?"$"+fmt(r.price):"—"}</td><td class="num ${tc(r.todayPct)}">${fmtPct(r.todayPct)}</td><td class="num ${tc(r.startPct)}">${fmtPct(r.startPct)}</td><td style="font-size:.75rem;color:#8b949e">${r.meta.target||'—'}</td><td style="font-size:.75rem;color:#8b949e">${r.meta.tf||'—'}</td>`;
+    const tc=v=>v==null?"neutral":v>=0?"pos":"neg";
+    const sideCls={LONG:"badge-long",SHORT:"badge-short",WATCH:"badge-watch",BENCHMARK:"badge-benchmark"};
+    const color=r.meta.color||"#445560";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><strong style="font-family:'IBM Plex Mono',monospace;color:${color}">${r.t}</strong></td>
+      <td style="color:#445560;font-size:11px;font-family:'IBM Plex Sans',sans-serif">${r.meta.name||r.t}</td>
+      <td><span class="badge ${sideCls[r.meta.side]||'badge-watch'}">${r.meta.side||'WATCH'}</span></td>
+      <td><span style="font-size:10px;letter-spacing:0.08em;color:${color}">${r.meta.cat||'—'}</span></td>
+      <td class="num">${r.price!=null?"$"+fmt(r.price):"—"}</td>
+      <td class="num ${tc(r.todayPct)}">${fmtPct(r.todayPct)}</td>
+      <td class="num ${tc(r.startPct)}">${fmtPct(r.startPct)}</td>
+      <td style="font-size:11px;color:#445560">${r.meta.target||'—'}</td>
+      <td style="font-size:11px;color:#445560">${r.meta.tf||'—'}</td>
+    `;
     tbody.appendChild(tr);
   });
 }
@@ -834,24 +895,16 @@ async function load(){
     document.getElementById("no-data").style.display="block";
     return;
   }
-
   const rows=parseCSV(text).filter(r=>r.ticker&&r.close&&r.close!=="");
-  if(!rows.length){
-    document.getElementById("no-data").style.display="block";
-    return;
-  }
-
+  if(!rows.length){document.getElementById("no-data").style.display="block";return;}
   document.getElementById("dashboard").style.display="block";
-
-  gByTicker = groupByTicker(rows);
-  gTickers  = Object.keys(ASSETS).filter(t=>gByTicker[t]);
+  gByTicker=groupByTicker(rows);
+  gTickers=Object.keys(ASSETS).filter(t=>gByTicker[t]);
   const lastDate=rows.reduce((a,r)=>r.date>a?r.date:a,"");
-
-  document.getElementById("last-updated").textContent="Last updated: "+lastDate;
-
+  document.getElementById("last-updated").textContent="// last updated: "+lastDate;
   const vixData=gByTicker["^VIX"];
-  if(vixData&&vixData.length>0&&vixData[vixData.length-1].close<20)document.getElementById("vix-alert").style.display="flex";
-
+  if(vixData&&vixData.length>0&&vixData[vixData.length-1].close<20)
+    document.getElementById("vix-alert").style.display="flex";
   initFilters();
   applyFilters();
 }

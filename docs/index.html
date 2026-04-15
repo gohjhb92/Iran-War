@@ -4,98 +4,406 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iran War Portfolio Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --bg: #080c10; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #8b949e; --orange: #f97316; --cyan: #22d3ee; --emerald: #10b981; --blue: #60a5fa; --gold: #fbbf24; --red: #f87171; --gray: #9ca3af; --green: #4ade80; --yellow: #facc15; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
 
-/* Ambient background glow */
-body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 120% 40% at 50% -5%, rgba(249,115,22,0.07), transparent); z-index: 0; }
+:root {
+  --bg:      #080b0e;
+  --surface: #0d1117;
+  --surface2:#111820;
+  --border:  #1a2530;
+  --border2: #243040;
+  --text:    #a8bcc8;
+  --dim:     #445560;
+  --white:   #ddeef5;
+  --green:   #00e676;
+  --amber:   #ffab00;
+  --red:     #ff1744;
+  --blue:    #29b6f6;
+  --orange:  #f97316;
+  --cyan:    #22d3ee;
+  --gold:    #fbbf24;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
 
-/* Sticky nav */
-nav.site-nav { position: sticky; top: 0; z-index: 100; background: rgba(8,12,16,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; padding: 0 20px; }
-nav.site-nav a { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; letter-spacing: 0.02em; }
+/* ── GRID OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,37,48,0.5) 39px, rgba(26,37,48,0.5) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,37,48,0.5) 39px, rgba(26,37,48,0.5) 40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,11,14,0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  padding: 0 20px;
+}
+
+nav.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
 nav.site-nav a:hover { color: var(--text); }
-nav.site-nav a.active { color: var(--orange); border-bottom-color: var(--orange); }
+nav.site-nav a.active { color: var(--red); border-bottom-color: var(--red); }
 nav.site-nav a.food:hover { color: var(--green); }
 
-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; position: relative; z-index: 1; }
-.header-title { flex: 1; min-width: 200px; border-left: 3px solid var(--orange); padding-left: 14px; }
-.header-title h1 { font-size: 1.25rem; font-weight: 700; background: linear-gradient(90deg, #f97316, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.header-title p { color: var(--muted); font-size: 0.8rem; margin-top: 3px; }
-#last-updated { color: var(--muted); font-size: 0.75rem; white-space: nowrap; position: relative; z-index: 1; }
+.nav-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-#war-banner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 24px; font-size: 1rem; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; user-select: none; transition: background 0.2s, color 0.2s; position: relative; z-index: 1; }
-#war-banner.escalating { background: #3b0a0a; color: #f87171; border-bottom: 2px solid #f87171; animation: banner-pulse 2.5s ease-in-out infinite; }
-#war-banner.ceasefire { background: #2d2506; color: #fbbf24; border-bottom: 2px solid #fbbf24; }
-#war-banner.deescalating { background: #052e16; color: #4ade80; border-bottom: 2px solid #4ade80; }
-#war-banner .hint { font-size: 0.65rem; font-weight: 400; opacity: 0.6; letter-spacing: 0.02em; }
-@keyframes banner-pulse { 0%,100% { box-shadow: inset 0 0 0 rgba(248,113,113,0); } 50% { box-shadow: inset 0 0 40px rgba(248,113,113,0.1); } }
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
 
-main { max-width: 1400px; margin: 0 auto; padding: 20px 16px; position: relative; z-index: 1; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } nav.site-nav { flex-wrap: wrap; } }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: box-shadow 0.2s; }
-.card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06); }
-.card h2 { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.header-title {
+  flex: 1;
+  min-width: 200px;
+  border-left: 3px solid var(--red);
+  padding-left: 14px;
+}
+
+.header-title h1 {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+
+.header-title p {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+#last-updated {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── WAR BANNER ── */
+#war-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 9px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+  position: relative;
+  z-index: 1;
+}
+
+#war-banner.escalating {
+  background: rgba(255,23,68,0.08);
+  color: var(--red);
+  border-bottom: 1px solid rgba(255,23,68,0.3);
+  animation: banner-pulse 2.5s ease-in-out infinite;
+}
+#war-banner.ceasefire {
+  background: rgba(255,171,0,0.06);
+  color: var(--amber);
+  border-bottom: 1px solid rgba(255,171,0,0.3);
+}
+#war-banner.deescalating {
+  background: rgba(0,230,118,0.05);
+  color: var(--green);
+  border-bottom: 1px solid rgba(0,230,118,0.25);
+}
+
+.banner-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
+}
+
+.banner-hint {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.5;
+  letter-spacing: 0.1em;
+}
+
+@keyframes banner-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: inset 0 0 40px rgba(255,23,68,0.06); }
+}
+
+/* ── FILTER BAR ── */
+#filter-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 10px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.filter-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.chip {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  padding: 3px 10px;
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip:hover { border-color: var(--text); color: var(--text); }
+.chip.active-chip { border-color: var(--red); color: var(--red); background: rgba(255,23,68,0.06); }
+
+.filter-select {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 0;
+  color: var(--text);
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  outline: none;
+}
+.filter-select:focus { border-color: var(--red); }
+
+.filter-divider { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+
+/* ── MAIN LAYOUT ── */
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  nav.site-nav { flex-wrap: wrap; }
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.card:hover { border-color: var(--blue); }
+
+.card h2 {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border2);
+}
+
+/* ── CHARTS ── */
 .chart-wrap { position: relative; width: 100%; }
-.chart-wrap.tall { height: 420px; }
+.chart-wrap.tall  { height: 420px; }
 .chart-wrap.short { height: 340px; }
+
 .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--muted); }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--dim); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── TABLE ── */
 .table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-thead tr { border-top: 2px solid var(--orange); }
-thead th { background: var(--bg); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.72rem; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+thead tr { border-top: 2px solid var(--red); }
+
+thead th {
+  background: var(--bg);
+  color: var(--dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 9px;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+
 thead th.num { text-align: right; }
+
 tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
-tbody tr:hover { background: rgba(255,255,255,0.04); }
+tbody tr:hover { background: rgba(41,182,246,0.04); }
+
 tbody td { padding: 7px 10px; white-space: nowrap; }
-tbody td.num { text-align: right; font-family: "SF Mono", "Fira Code", monospace; }
+tbody td.num { text-align: right; font-family: var(--mono); }
+
 .pos { color: var(--green); }
 .neg { color: var(--red); }
-.neutral { color: var(--muted); }
-.cat-badge { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
-#no-data { display: none; padding: 40px; text-align: center; color: var(--muted); }
-#no-data h3 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
-footer { border-top: 1px solid var(--border); padding: 16px 24px; color: var(--muted); font-size: 0.72rem; text-align: center; line-height: 1.6; font-style: italic; background: linear-gradient(to bottom, var(--bg), #05070a); position: relative; z-index: 1; }
-footer strong { color: var(--text); font-style: normal; }
+.neutral { color: var(--dim); }
 
-/* Filter bar */
-#filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; position: relative; z-index: 1; }
-.filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.filter-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
-.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.chip { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em; }
-.chip:hover { border-color: var(--text); color: var(--text); }
-.chip.active-chip { border-color: var(--orange); color: var(--orange); background: rgba(249,115,22,0.12); }
-.filter-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; outline: none; }
-.filter-select:focus { border-color: var(--orange); }
-.filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+.cat-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 0;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── NO DATA ── */
+#no-data {
+  display: none;
+  padding: 48px;
+  text-align: center;
+  color: var(--dim);
+}
+#no-data h3 { font-size: 14px; margin-bottom: 8px; color: var(--text); }
+code {
+  background: var(--surface2);
+  padding: 2px 6px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border2);
+  padding: 14px 24px;
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+}
+footer strong { color: var(--text); }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="./" class="active">🔴 Iran War Tracker</a>
-  <a href="./food-shock/" class="food">🌾 Food Shock Tracker</a>
+  <a href="./" class="active">
+    <span class="nav-dot" style="background:var(--red);box-shadow:0 0 5px var(--red)"></span>
+    Iran War Tracker
+  </a>
+  <a href="./food-shock/" class="food">
+    <span class="nav-dot" style="background:var(--dim)"></span>
+    Food Shock Tracker
+  </a>
 </nav>
 
 <header>
   <div class="header-title">
     <h1>Iran War Portfolio Tracker</h1>
-    <p>Thesis start: 2026-02-28  |  US-Israel vs Iran conflict · Strait of Hormuz · Oil shock · Defense surge</p>
+    <p>// Thesis start: 2026-02-28 &nbsp;&middot;&nbsp; US-Israel vs Iran &nbsp;&middot;&nbsp; Strait of Hormuz &nbsp;&middot;&nbsp; Oil shock &nbsp;&middot;&nbsp; Defense surge</p>
   </div>
   <div id="last-updated"></div>
 </header>
 
 <div id="war-banner" onclick="cycleWarStatus()" title="Click to cycle war status">
-  <span id="war-icon">🔴</span>
+  <span class="banner-dot"></span>
   <span id="war-label">ESCALATING</span>
-  <span class="hint">(click to toggle)</span>
+  <span class="banner-hint">(click to toggle)</span>
 </div>
 
 <div id="filter-bar">
@@ -143,13 +451,13 @@ footer strong { color: var(--text); font-style: normal; }
   <div id="dashboard" style="display: none;">
     <div class="grid-2">
       <div class="card">
-        <h2>Performance since thesis start (% change)</h2>
+        <h2>// Performance since thesis start (% change)</h2>
         <div class="chart-wrap tall">
           <canvas id="barChart"></canvas>
         </div>
       </div>
       <div class="card">
-        <h2>Cumulative performance over time</h2>
+        <h2>// Cumulative performance over time</h2>
         <div id="lineLegend" class="legend"></div>
         <div class="chart-wrap tall">
           <canvas id="lineChart"></canvas>
@@ -158,7 +466,7 @@ footer strong { color: var(--text); font-style: normal; }
     </div>
 
     <div class="card">
-      <h2>Summary table</h2>
+      <h2>// Summary table</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -184,41 +492,36 @@ footer strong { color: var(--text); font-style: normal; }
 
 <script>
 const ASSETS = {
-  USO: { name: "US Oil Fund", cat: "Energy", color: "#f97316" },
-  XLE: { name: "Energy Select SPDR", cat: "Energy", color: "#f97316" },
-  XOM: { name: "ExxonMobil", cat: "Energy", color: "#f97316" },
-  CVX: { name: "Chevron", cat: "Energy", color: "#f97316" },
-  BWET: { name: "Breakwave Tanker ETF", cat: "Tanker", color: "#22d3ee" },
-  LNG: { name: "Cheniere Energy (LNG)", cat: "LNG", color: "#10b981" },
-  LMT: { name: "Lockheed Martin", cat: "Defense", color: "#60a5fa" },
-  NOC: { name: "Northrop Grumman", cat: "Defense", color: "#60a5fa" },
-  RTX: { name: "RTX Corp", cat: "Defense", color: "#60a5fa" },
-  ITA: { name: "iShares Aerospace & Defense", cat: "Defense", color: "#60a5fa" },
-  PLTR: { name: "Palantir (AI/Defense Intel)", cat: "Defense", color: "#60a5fa" },
-  KTOS: { name: "Kratos Defense", cat: "Defense", color: "#60a5fa" },
-  GLD: { name: "SPDR Gold Shares", cat: "Commodities", color: "#fbbf24" },
+  USO:  { name: "US Oil Fund",                  cat: "Energy",      color: "#f97316" },
+  XLE:  { name: "Energy Select SPDR",           cat: "Energy",      color: "#f97316" },
+  XOM:  { name: "ExxonMobil",                   cat: "Energy",      color: "#f97316" },
+  CVX:  { name: "Chevron",                      cat: "Energy",      color: "#f97316" },
+  BWET: { name: "Breakwave Tanker ETF",         cat: "Tanker",      color: "#22d3ee" },
+  LNG:  { name: "Cheniere Energy (LNG)",        cat: "LNG",         color: "#10b981" },
+  LMT:  { name: "Lockheed Martin",              cat: "Defense",     color: "#60a5fa" },
+  NOC:  { name: "Northrop Grumman",             cat: "Defense",     color: "#60a5fa" },
+  RTX:  { name: "RTX Corp",                     cat: "Defense",     color: "#60a5fa" },
+  ITA:  { name: "iShares Aerospace & Defense",  cat: "Defense",     color: "#60a5fa" },
+  PLTR: { name: "Palantir (AI/Defense Intel)",  cat: "Defense",     color: "#60a5fa" },
+  KTOS: { name: "Kratos Defense",               cat: "Defense",     color: "#60a5fa" },
+  GLD:  { name: "SPDR Gold Shares",             cat: "Commodities", color: "#fbbf24" },
   HGER: { name: "Harbor Commodity All-Weather", cat: "Commodities", color: "#fbbf24" },
-  REMX: { name: "VanEck Rare Earth & Metals", cat: "Commodities", color: "#fbbf24" },
-  SCO: { name: "2× Inverse Crude (ceasefire)", cat: "Hedge", color: "#f87171" },
-  TAIL: { name: "Cambria Tail Risk ETF", cat: "Hedge", color: "#f87171" },
-  SPY: { name: "S&P 500", cat: "Benchmark", color: "#9ca3af" },
-  QQQ: { name: "Nasdaq 100", cat: "Benchmark", color: "#9ca3af" },
+  REMX: { name: "VanEck Rare Earth & Metals",   cat: "Commodities", color: "#fbbf24" },
+  SCO:  { name: "2× Inverse Crude (ceasefire)", cat: "Hedge",       color: "#f87171" },
+  TAIL: { name: "Cambria Tail Risk ETF",         cat: "Hedge",       color: "#f87171" },
+  SPY:  { name: "S&P 500",                      cat: "Benchmark",   color: "#9ca3af" },
+  QQQ:  { name: "Nasdaq 100",                   cat: "Benchmark",   color: "#9ca3af" },
 };
 
 const CAT_COLORS = {
-  Energy: "#f97316",
-  Tanker: "#22d3ee",
-  LNG: "#10b981",
-  Defense: "#60a5fa",
-  Commodities: "#fbbf24",
-  Hedge: "#f87171",
-  Benchmark: "#9ca3af",
+  Energy: "#f97316", Tanker: "#22d3ee", LNG: "#10b981", Defense: "#60a5fa",
+  Commodities: "#fbbf24", Hedge: "#f87171", Benchmark: "#9ca3af",
 };
 
 const WAR_STATES = [
-  { key: "escalating", icon: "🔴", label: "ESCALATING", cls: "escalating" },
-  { key: "ceasefire", icon: "🟡", label: "CEASEFIRE", cls: "ceasefire" },
-  { key: "deescalating", icon: "🟢", label: "DE-ESCALATING", cls: "deescalating" },
+  { key: "escalating",   label: "ESCALATING",    cls: "escalating"   },
+  { key: "ceasefire",    label: "CEASEFIRE",      cls: "ceasefire"    },
+  { key: "deescalating", label: "DE-ESCALATING",  cls: "deescalating" },
 ];
 
 let warIdx = 0;
@@ -227,7 +530,6 @@ function applyWarStatus() {
   const s = WAR_STATES[warIdx];
   const banner = document.getElementById("war-banner");
   banner.className = s.cls;
-  document.getElementById("war-icon").textContent = s.icon;
   document.getElementById("war-label").textContent = s.label;
 }
 
@@ -253,9 +555,7 @@ function parseCSV(text) {
   const rows = lines.slice(1).map(line => {
     const vals = line.split(",");
     const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = vals[i] ? vals[i].trim() : "";
-    });
+    headers.forEach((h, i) => { obj[h] = vals[i] ? vals[i].trim() : ""; });
     return obj;
   });
   return { headers, rows };
@@ -278,8 +578,6 @@ function fmtPct(v) {
 }
 
 let barChart, lineChart;
-
-// ── Global data store for reactive filtering ──
 let gTickers = [], gBaselineRow = {}, gLatestRow = {}, gPrevRow = null, gDates = [], gSeriesMap = {};
 let gActiveCat = "all", gActivePerf = "all", gActiveSort = "start_desc";
 
@@ -334,8 +632,8 @@ function buildBarChart(tickers, pctChanges) {
     .filter(d => d.pct !== null)
     .sort((a, b) => b.pct - a.pct);
   const labels = sorted.map(d => d.ticker);
-  const data = sorted.map(d => d.pct);
-  const colors = sorted.map(d => ASSETS[d.ticker]?.color ?? "#8b949e");
+  const data   = sorted.map(d => d.pct);
+  const colors = sorted.map(d => ASSETS[d.ticker]?.color ?? "#445560");
   const ctx = document.getElementById("barChart").getContext("2d");
   if (barChart) barChart.destroy();
   barChart = new Chart(ctx, {
@@ -344,10 +642,10 @@ function buildBarChart(tickers, pctChanges) {
       labels,
       datasets: [{
         data,
-        backgroundColor: colors.map(c => c + "cc"),
+        backgroundColor: colors.map(c => c + "99"),
         borderColor: colors,
         borderWidth: 1,
-        borderRadius: 3,
+        borderRadius: 0,
       }]
     },
     options: {
@@ -357,25 +655,27 @@ function buildBarChart(tickers, pctChanges) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: "#0d1117",
+          borderColor: "#243040",
+          borderWidth: 1,
+          titleColor: "#ddeef5",
+          bodyColor: "#a8bcc8",
           callbacks: {
             label: ctx => `${fmtPct(ctx.parsed.x)}`,
-            title: ctx => {
-              const t = ctx[0].label;
-              return `${t} — ${ASSETS[t]?.name ?? ""}`;
-            }
+            title: ctx => `${ctx[0].label} — ${ASSETS[ctx[0].label]?.name ?? ""}`,
           }
         }
       },
       scales: {
         x: {
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: { color: "#8b949e", callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%` },
-          border: { color: "#30363d" }
+          grid: { color: "rgba(36,48,64,0.8)" },
+          ticks: { color: "#445560", font: { family: "'IBM Plex Mono'", size: 11 }, callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%` },
+          border: { color: "#243040" }
         },
         y: {
           grid: { display: false },
-          ticks: { color: "#e6edf3", font: { family: "monospace", size: 12 } },
-          border: { color: "#30363d" }
+          ticks: { color: "#ddeef5", font: { family: "'IBM Plex Mono'", size: 12 } },
+          border: { color: "#243040" }
         }
       }
     }
@@ -385,7 +685,7 @@ function buildBarChart(tickers, pctChanges) {
 function buildLineChart(dates, seriesMap) {
   const tickers = Object.keys(seriesMap);
   const datasets = tickers.map(t => {
-    const color = ASSETS[t]?.color ?? "#8b949e";
+    const color = ASSETS[t]?.color ?? "#445560";
     const isIndex = ["SPY","QQQ"].includes(t);
     return {
       label: t,
@@ -393,7 +693,7 @@ function buildLineChart(dates, seriesMap) {
       borderColor: color,
       backgroundColor: "transparent",
       borderWidth: isIndex ? 1.5 : 2,
-      borderDash: isIndex ? [4,3] : [],
+      borderDash: isIndex ? [4, 3] : [],
       pointRadius: 0,
       tension: 0.2,
     };
@@ -410,22 +710,25 @@ function buildLineChart(dates, seriesMap) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.parsed.y)}`
-          }
+          backgroundColor: "#0d1117",
+          borderColor: "#243040",
+          borderWidth: 1,
+          titleColor: "#ddeef5",
+          bodyColor: "#a8bcc8",
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.parsed.y)}` }
         }
       },
       scales: {
         x: {
           type: "category",
-          grid: { color: "rgba(255,255,255,0.04)" },
-          ticks: { color: "#8b949e", maxTicksLimit: 8, maxRotation: 0, },
-          border: { color: "#30363d" }
+          grid: { color: "rgba(36,48,64,0.5)" },
+          ticks: { color: "#445560", font: { family: "'IBM Plex Mono'", size: 10 }, maxTicksLimit: 8, maxRotation: 0 },
+          border: { color: "#243040" }
         },
         y: {
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: { color: "#8b949e", callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%` },
-          border: { color: "#30363d" }
+          grid: { color: "rgba(36,48,64,0.8)" },
+          ticks: { color: "#445560", font: { family: "'IBM Plex Mono'", size: 11 }, callback: v => `${v >= 0 ? "+" : ""}${v.toFixed(0)}%` },
+          border: { color: "#243040" }
         }
       }
     }
@@ -433,12 +736,8 @@ function buildLineChart(dates, seriesMap) {
   const legend = document.getElementById("lineLegend");
   legend.innerHTML = "";
   tickers.forEach(t => {
-    const color = ASSETS[t]?.color ?? "#8b949e";
-    legend.innerHTML += `
-      <span class="legend-item">
-        <span class="legend-dot" style="background:${color}"></span>
-        ${t}
-      </span>`;
+    const color = ASSETS[t]?.color ?? "#445560";
+    legend.innerHTML += `<span class="legend-item"><span class="legend-dot" style="background:${color}"></span>${t}</span>`;
   });
 }
 
@@ -451,9 +750,9 @@ function buildTable(tickers, baselineRow, latestRow, prevRow, sortKey = "start_d
     const prev = prevRow ? parseFloat(prevRow[t]) : null;
     return {
       ticker: t,
-      cat: ASSETS[t]?.cat ?? "—",
+      cat:  ASSETS[t]?.cat ?? "—",
       name: ASSETS[t]?.name ?? t,
-      color: ASSETS[t]?.color ?? "#8b949e",
+      color: ASSETS[t]?.color ?? "#445560",
       price: isNaN(last) ? null : last,
       todayPct: pct(last, prev),
       startPct: pct(last, base),
@@ -466,19 +765,15 @@ function buildTable(tickers, baselineRow, latestRow, prevRow, sortKey = "start_d
     today_asc:  (a, b) => (a.todayPct ?? Infinity)  - (b.todayPct ?? Infinity),
     az:         (a, b) => a.ticker.localeCompare(b.ticker),
   };
-  const sorted = rows.sort(sorters[sortKey] ?? sorters.start_desc);
-  sorted.forEach(r => {
+  rows.sort(sorters[sortKey] ?? sorters.start_desc);
+  rows.forEach(r => {
     const todayCls = r.todayPct === null ? "neutral" : r.todayPct >= 0 ? "pos" : "neg";
     const startCls = r.startPct === null ? "neutral" : r.startPct >= 0 ? "pos" : "neg";
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><strong style="font-family:monospace;color:${r.color}">${r.ticker}</strong></td>
-      <td style="color:#8b949e;font-size:0.8rem">${r.name}</td>
-      <td>
-        <span class="cat-badge" style="background:${r.color}22;color:${r.color}">
-          ${r.cat}
-        </span>
-      </td>
+      <td><strong style="font-family:'IBM Plex Mono',monospace;color:${r.color}">${r.ticker}</strong></td>
+      <td style="color:#445560;font-size:11px;font-family:'IBM Plex Sans',sans-serif">${r.name}</td>
+      <td><span class="cat-badge" style="background:${r.color}15;color:${r.color};border:1px solid ${r.color}30">${r.cat}</span></td>
       <td class="num">${r.price !== null ? "$" + fmt(r.price) : "—"}</td>
       <td class="num ${todayCls}">${fmtPct(r.todayPct)}</td>
       <td class="num ${startCls}">${fmtPct(r.startPct)}</td>
@@ -514,7 +809,7 @@ async function loadData() {
     const base = parseFloat(gBaselineRow[t]);
     gSeriesMap[t] = dataRows.map(r => pct(parseFloat(r[t]), base));
   });
-  document.getElementById("last-updated").textContent = `Last updated: ${gLatestRow.Date}`;
+  document.getElementById("last-updated").textContent = `// last updated: ${gLatestRow.Date}`;
   initFilters();
   applyFilters();
 }
